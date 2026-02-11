@@ -30,10 +30,10 @@ public class TabelaTarifariaController {
     private TabelaTarifariaMapper tabelaTarifariaMapper;
 
     @PostMapping
-    public ResponseEntity<TabelaTarifariaResponseDTO> createTabelaTarifaria(@RequestBody TabelaTarifariaCreateUpdateDTO tabelaTarifariaRequestDTO) {
+    public ResponseEntity<Void> createTabelaTarifaria(@RequestBody TabelaTarifariaCreateUpdateDTO tabelaTarifariaRequestDTO) {
         TabelaTarifaria tabelaTarifaria = tabelaTarifariaMapper.toEntity(tabelaTarifariaRequestDTO);
-        TabelaTarifaria createdTabela = tabelaTarifariaService.createTabelaTarifaria(tabelaTarifaria);
-        return new ResponseEntity<>(tabelaTarifariaMapper.convertToResponseDTO(createdTabela), HttpStatus.CREATED);
+        tabelaTarifariaService.createTabelaTarifaria(tabelaTarifaria);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @GetMapping
