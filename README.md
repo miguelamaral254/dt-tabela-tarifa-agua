@@ -99,60 +99,17 @@ Cria uma nova tabela tarifária com suas faixas de consumo associadas.
       ]
     }
     ```
-*   **Response (Sucesso - 201 Created):** `TabelaTarifariaResponseDTO`
-    ```json
-    {
-      "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-      "nome": "Tabela Tarifa Água 2024 - Exemplo",
-      "dataVigencia": "2024-01-01",
-      "faixasConsumo": [
-        {
-          "id": "f1e2d3c4-b5a6-9870-6543-210fedcba987",
-          "categoriaConsumidor": {
-            "id": "x1y2z3a4-b5c6-d7e8-f901-23456789abcd",
-            "nome": "PARTICULAR"
-          },
-          "inicio": 0,
-          "fim": 10,
-          "valorUnitario": 3.50
-        },
-        {
-          "id": "g1h2i3j4-k5l6-m7n8-o9p0-1234567890fe",
-          "categoriaConsumidor": {
-            "id": "x1y2z3a4-b5c6-d7e8-f901-23456789abcd",
-            "nome": "PARTICULAR"
-          },
-          "inicio": 11,
-          "fim": 20,
-          "valorUnitario": 5.00
-        },
-        {
-          "id": "q1r2s3t4-u5v6-w7x8-y9z0-1234567890ab",
-          "categoriaConsumidor": {
-            "id": "x1y2z3a4-b5c6-d7e8-f901-23456789abcd",
-            "nome": "PARTICULAR"
-          },
-          "inicio": 21,
-          "fim": 999999,
-          "valorUnitario": 7.00
-        }
-      ]
-    }
-    ```
+*   **Response (Sucesso - 201 Created):** (Sem conteúdo no corpo)
 *   **Response (Erro de Validação - 400 Bad Request):**
     ```json
     {
-      "timestamp": "2026-02-11T01:03:17.2573523",
-      "message": "A primeira faixa de consumo deve iniciar em 0 m³.",
-      "path": "uri=/api/v1/tabelas-tarifarias"
+      "message": "A primeira faixa de consumo deve iniciar em 0 m³."
     }
     ```
 *   **Response (Erro de Conflito - 409 Conflict):**
     ```json
     {
-      "timestamp": "2026-02-11T01:03:17.2573523",
-      "message": "Há uma lacuna entre as faixas de consumo. Faixa 0-10 e faixa 12-20",
-      "path": "uri=/api/v1/tabelas-tarifarias"
+      "message": "Há uma lacuna entre as faixas de consumo. Faixa 0-10 e faixa 12-20"
     }
     ```
 
@@ -172,9 +129,7 @@ Obtém os detalhes de uma tabela tarifária específica pelo seu ID.
 *   **Response (Não Encontrado - 404 Not Found):**
     ```json
     {
-      "timestamp": "2026-02-11T01:03:17.2573523",
-      "message": "Tabela Tarifária não encontrada com o id: [ID_INVALIDO]",
-      "path": "uri=/api/v1/tabelas-tarifarias/[ID_INVALIDO]"
+      "message": "Tabela Tarifária não encontrada com o id: [ID_INVALIDO]"
     }
     ```
 
@@ -247,12 +202,72 @@ Calcula o valor da tarifa de água para um determinado consumo e categoria, usan
 *   **Response (Erro - 404 Not Found):**
     ```json
     {
-      "timestamp": "2026-02-11T01:03:17.2573523",
       "message": "Nenhuma tabela de tarifa ativa encontrada."
     }
     ```
 
+## Documentação da API
+
+A documentação interativa da API está disponível via Swagger UI no seguinte link:
+
+[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
 ## Scripts de Banco de Dados
+
+As migrações do banco de dados são gerenciadas pelo Flyway e estão localizadas em `src/main/resources/db/migration/`.
+
+### `V1__Create_initial_tables.sql`
+
+```sql
+CREATE TABLE tabela_tarifaria (
+    id UUID PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    data_vigencia DATE NOT NULL
+);
+
+CREATE TABLE categoria_consumidor (
+    id UUID PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE faixa_consumo (
+    id UUID PRIMARY KEY,
+    tabela_tarifaria_id UUID NOT NULL,
+    categoria_consumidor_id UUID NOT NULL,
+    inicio INTEGER NOT NULL,
+    fim INTEGER NOT NULL,
+    valor_unitario NUMERIC(19, 2) NOT NULL,
+    FOREIGN KEY (tabela_tarifaria_id) REFERENCES tabela_tarifaria(id),
+    FOREIGN KEY (categoria_consumidor_id) REFERENCES categoria_consumidor(id),
+    UNIQUE (tabela_tarifaria_id, categoria_consumidor_id, inicio, fim)
+);
+
+-- Inserir categorias de consumidor padrão (seed data)
+INSERT INTO categoria_consumidor (id, nome) VALUES
+(gen_random_uuid(), 'COMERCIAL'),
+(gen_random_uuid(), 'INDUSTRIAL'),
+(gen_random_uuid(), 'PARTICULAR'),
+(gen_random_uuid(), 'PÚBLICO');
+```
+
+### `V2__Insert_sample_data.sql` (Opcional - Dados de Exemplo)
+
+```sql
+INSERT INTO tabela_tarifaria (id, nome, data_vigencia)
+VALUES ('7b9c1d0a-2e3f-4567-89ab-cdef01234567', 'Tabela de Exemplo - Valida', '2024-01-01');
+
+INSERT INTO faixa_consumo (id, tabela_tarifaria_id, categoria_consumidor_id, inicio, fim, valor_unitario)
+VALUES
+(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'PARTICULAR'), 0, 10, 3.50),
+(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'PARTICULAR'), 11, 20, 5.00),
+(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'PARTICULAR'), 21, 9999999, 7.00),
+
+(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'COMERCIAL'), 0, 50, 6.00),
+(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'COMERCIAL'), 51, 9999999, 9.00),
+
+(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'INDUSTRIAL'), 0, 10, 1.00),
+(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'INDUSTRIAL'), 11, 20, 2.00),
+(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'INDUSTRIAL'), 21, 9999999, 3.00);
 
 As migrações do banco de dados são gerenciadas pelo Flyway e estão localizadas em `src/main/resources/db/migration/`.
 
