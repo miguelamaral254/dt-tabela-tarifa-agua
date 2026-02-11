@@ -96,6 +96,7 @@ public class TabelaTarifariaService {
             validateCompleteCoverageStart(faixasDaCategoria);
             validateNoOverlap(faixasDaCategoria);
             validateSufficientCoverage(faixasDaCategoria);
+            validateLastFaixaFim(faixasDaCategoria);
         }
     }
 
@@ -104,6 +105,16 @@ public class TabelaTarifariaService {
             if (faixa.getInicio() >= faixa.getFim()) {
                 throw new IllegalArgumentException("O valor inicial da faixa (" + faixa.getInicio() + ") deve ser menor que o valor final (" + faixa.getFim() + ").");
             }
+        }
+    }
+
+    private void validateLastFaixaFim(List<FaixaConsumo> faixasConsumo) {
+        if (faixasConsumo.isEmpty()) {
+            return;
+        }
+        FaixaConsumo lastFaixa = faixasConsumo.get(faixasConsumo.size() - 1);
+        if (lastFaixa.getFim() < 99999) {
+            throw new IllegalArgumentException("A última faixa de consumo para a categoria " + lastFaixa.getCategoriaConsumidor().getNome() + " deve terminar em um valor alto (e.g., 99999 ou mais) para garantir cobertura completa. Fim atual: " + lastFaixa.getFim());
         }
     }
 
