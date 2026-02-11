@@ -8,14 +8,16 @@ import gruporas.dttabelatarifaagua.model.TabelaTarifaria;
 import gruporas.dttabelatarifaagua.repository.CategoriaConsumidorRepository;
 import gruporas.dttabelatarifaagua.repository.TabelaTarifariaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.Optional;
-import java.util.Map; // New import
-import java.util.stream.Collectors; // New import
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class TabelaTarifariaService {
@@ -54,8 +56,8 @@ public class TabelaTarifariaService {
         return tabelaTarifariaRepository.save(tabelaTarifaria);
     }
 
-    public List<TabelaTarifaria> getAllTabelasTarifarias() {
-        return tabelaTarifariaRepository.findAll();
+    public Page<TabelaTarifaria> getAllTabelasTarifarias(Pageable pageable) {
+        return tabelaTarifariaRepository.findAll(pageable);
     }
 
     public TabelaTarifaria getTabelaTarifariaById(UUID id) {

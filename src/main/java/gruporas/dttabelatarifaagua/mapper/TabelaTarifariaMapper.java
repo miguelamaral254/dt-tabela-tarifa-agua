@@ -8,6 +8,7 @@ import gruporas.dttabelatarifaagua.dto.TabelaTarifariaResponseDTO;
 import gruporas.dttabelatarifaagua.model.TabelaTarifaria;
 import gruporas.dttabelatarifaagua.model.FaixaConsumo;
 import gruporas.dttabelatarifaagua.model.CategoriaConsumidor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -33,6 +34,10 @@ public class TabelaTarifariaMapper {
                 tabelaTarifaria.getDataVigencia(),
                 faixasConsumoDTO
         );
+    }
+
+    public Page<TabelaTarifariaResponseDTO> convertToResponseDTOPage(Page<TabelaTarifaria> tabelasTarifariasPage) {
+        return tabelasTarifariasPage.map(this::convertToResponseDTO);
     }
 
     public TabelaTarifaria toEntity(TabelaTarifariaCreateUpdateDTO tabelaTarifariaRequestDTO) {
