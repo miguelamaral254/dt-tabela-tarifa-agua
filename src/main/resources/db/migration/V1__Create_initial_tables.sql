@@ -1,22 +1,22 @@
-CREATE TABLE tabela_tarifaria (
+CREATE TABLE tariff_table (
     id UUID PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    data_vigencia DATE NOT NULL
+    name VARCHAR(255) NOT NULL,
+    effective_date DATE NOT NULL
 );
 
-CREATE TABLE categoria_consumidor (
+CREATE TABLE consumer_category (
     id UUID PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL UNIQUE
+    name VARCHAR(255) NOT NULL UNIQUE
 );
 
-CREATE TABLE faixa_consumo (
+CREATE TABLE consumption_range (
     id UUID PRIMARY KEY,
-    tabela_tarifaria_id UUID NOT NULL,
-    categoria_consumidor_id UUID NOT NULL,
-    inicio INTEGER NOT NULL,
-    fim INTEGER NOT NULL,
-    valor_unitario NUMERIC(19, 2) NOT NULL,
-    FOREIGN KEY (tabela_tarifaria_id) REFERENCES tabela_tarifaria(id),
-    FOREIGN KEY (categoria_consumidor_id) REFERENCES categoria_consumidor(id),
-    UNIQUE (tabela_tarifaria_id, categoria_consumidor_id, inicio, fim)
+    tariff_table_id UUID NOT NULL,
+    consumer_category_id UUID NOT NULL,
+    start_range INTEGER NOT NULL,
+    end_range INTEGER NOT NULL,
+    unit_value NUMERIC(19, 2) NOT NULL,
+    FOREIGN KEY (tariff_table_id) REFERENCES tariff_table(id),
+    FOREIGN KEY (consumer_category_id) REFERENCES consumer_category(id),
+    UNIQUE (tariff_table_id, consumer_category_id, start_range, end_range)
 );
