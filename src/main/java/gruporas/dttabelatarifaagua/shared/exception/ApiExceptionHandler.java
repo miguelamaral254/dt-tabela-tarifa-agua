@@ -67,39 +67,40 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ValidationException.class)
-    public ApiProblemDetail handle(ValidationException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        problemDetail.setTitle(getLocalizedMessage(VALIDATION_ERROR_TITLE));
-        problemDetail.setDetail(getLocalizedMessage(ex.getCode(), ex.getArgs()));
-        return new ApiProblemDetail(problemDetail);
+    public ResponseEntity<ApiErrorResponse> handle(ValidationException ex) {
+        String title = getLocalizedMessage(VALIDATION_ERROR_TITLE);
+        String detail = getLocalizedMessage(ex.getCode(), ex.getArgs());
+        ApiErrorResponse error = new ApiErrorResponse(title, HttpStatus.BAD_REQUEST.value(), detail);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ApiProblemDetail handle(EntityNotFoundException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
-        problemDetail.setTitle(getLocalizedMessage("error.notFound"));
-        problemDetail.setDetail(getLocalizedMessage(ex.getCode()));
-        return new ApiProblemDetail(problemDetail);
+    public ResponseEntity<ApiErrorResponse> handle(EntityNotFoundException ex) {
+        String title = getLocalizedMessage("error.notFound");
+        String detail = getLocalizedMessage(ex.getCode());
+        ApiErrorResponse error = new ApiErrorResponse(title, HttpStatus.NOT_FOUND.value(), detail);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     private String getLocalizedMessage(String code, Object... args) {
-        return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
+        try {
+            return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
+        } catch (org.springframework.context.NoSuchMessageException e) {
+            LOG.warn("Message code not found: {}", code);
+            return code;
+        }
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ApiProblemDetail> handleForbidden(ForbiddenException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
-        problemDetail.setTitle("Access Denied");
-        problemDetail.setDetail(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiProblemDetail(problemDetail));
+    public ResponseEntity<ApiErrorResponse> handleForbidden(ForbiddenException ex) {
+        ApiErrorResponse error = new ApiErrorResponse("Access Denied", HttpStatus.FORBIDDEN.value(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     @ExceptionHandler(Exception.class)
-    public ApiProblemDetail handleAllUnhandledExceptions(Exception ex, WebRequest request) {
+    public ResponseEntity<ApiErrorResponse> handleAllUnhandledExceptions(Exception ex, WebRequest request) {
         LOG.error("Unhandled exception occurred: {}", ex.getMessage(), ex);
-        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        problemDetail.setTitle("Internal Server Error");
-        problemDetail.setDetail("An unexpected error occurred. Please contact support if the issue persists");
-        return new ApiProblemDetail(problemDetail);
+        ApiErrorResponse error = new ApiErrorResponse("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred. Please contact support if the issue persists");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }

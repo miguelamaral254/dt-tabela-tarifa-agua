@@ -1,7 +1,7 @@
 package gruporas.dttabelatarifaagua.persistence.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.uuid.Generators;
+import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,10 +34,10 @@ public class ConsumptionRange {
     @JoinColumn(name = "consumer_category_id", nullable = false)
     private ConsumerCategory consumerCategory;
 
-    @Column(nullable = false)
+    @Column(name = "start_range", nullable = false)
     private Integer start;
 
-    @Column(nullable = false)
+    @Column(name = "end_range", nullable = false)
     private Integer end;
 
     @Column(name = "unit_value", nullable = false, precision = 19, scale = 2)
@@ -46,7 +46,7 @@ public class ConsumptionRange {
     @PrePersist
     protected void onCreate() {
         if (this.id == null) {
-            this.id = Generators.randomUuid();
+            this.id = UuidCreator.getRandomBased();
         }
     }
 }

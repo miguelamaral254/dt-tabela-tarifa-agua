@@ -6,5 +6,5 @@ import java.util.List;
 public record TariffTableRequest(
     String name,
     LocalDate effectiveDate,
-    List<ConsumptionRangeRequest> consumptionRanges
+    List<CategoryRequest> categories
 ) {}

@@ -14,13 +14,15 @@ public interface TariffTableRepository extends JpaRepository<TariffTable, UUID> 
     @Query("SELECT t FROM TariffTable t LEFT JOIN FETCH t.consumptionRanges fc WHERE fc IS NOT NULL ORDER BY t.effectiveDate DESC")
     List<TariffTable> findTopWithConsumptionRangesOrderByEffectiveDateDesc(Pageable pageable);
 
+    boolean existsByEffectiveDate(java.time.LocalDate effectiveDate);
+
     @Query(value = """
             SELECT 
                 fc.start_range as start, 
                 fc.end_range as end, 
                 fc.unit_value as unitValue,
-                (LEAST(:consumption, fc.end_range) - CASE WHEN fc.start_range = 0 THEN 0 ELSE fc.start_range - 1 END) as consumedM3,
-                (LEAST(:consumption, fc.end_range) - CASE WHEN fc.start_range = 0 THEN 0 ELSE fc.start_range - 1 END) * fc.unit_value as subtotal
+                CAST((LEAST(:consumption, fc.end_range) - fc.start_range + (CASE WHEN fc.start_range = 0 THEN 0 ELSE 1 END)) AS NUMERIC(19, 2)) as consumedM3,
+                CAST(((LEAST(:consumption, fc.end_range) - fc.start_range + (CASE WHEN fc.start_range = 0 THEN 0 ELSE 1 END)) * fc.unit_value) AS NUMERIC(19, 2)) as subtotal
             FROM consumption_range fc
             JOIN tariff_table tt ON fc.tariff_table_id = tt.id
             JOIN consumer_category cc ON fc.consumer_category_id = cc.id

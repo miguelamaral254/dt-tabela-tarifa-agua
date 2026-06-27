@@ -1,7 +1,7 @@
 package gruporas.dttabelatarifaagua.persistence.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.uuid.Generators;
+import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,7 +39,7 @@ public class TariffTable {
     @PrePersist
     protected void onCreate() {
         if (this.id == null) {
-            this.id = Generators.randomUuid();
+            this.id = UuidCreator.getRandomBased();
         }
     }
 }

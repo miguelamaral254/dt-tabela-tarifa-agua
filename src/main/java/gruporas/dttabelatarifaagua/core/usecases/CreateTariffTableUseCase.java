@@ -5,11 +5,11 @@ import gruporas.dttabelatarifaagua.persistence.model.ConsumptionRange;
 import gruporas.dttabelatarifaagua.persistence.model.TariffTable;
 import gruporas.dttabelatarifaagua.persistence.repository.ConsumerCategoryRepository;
 import gruporas.dttabelatarifaagua.persistence.repository.TariffTableRepository;
-import gruporas.dttabelatarifaagua.shared.exception.ResourceNotFoundException;
 import gruporas.dttabelatarifaagua.shared.exception.ValidationException;
-import gruporas.dttabelatarifaagua.shared.usecase.UnitUseCase;
+import gruporas.dttabelatarifaagua.shared.usecase.UseCase;
 import gruporas.dttabelatarifaagua.shared.utils.ObjectUtils;
-import gruporas.dttabelatarifaagua.web.dto.ConsumptionRangeRequest;
+import gruporas.dttabelatarifaagua.web.dto.CategoryRequest;
+import gruporas.dttabelatarifaagua.web.dto.RangeRequest;
 import gruporas.dttabelatarifaagua.web.dto.TariffTableRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,102 +17,95 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RequiredArgsConstructor
 @Service
 public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUID> {
 
-    private final TariffTableRepository tabelaTarifariaRepository;
+    private final TariffTableRepository tariffTableRepository;
     private final ConsumerCategoryRepository consumerCategoryRepository;
 
     @Transactional
     @Override
-    public void execute(TariffTableRequest request) {
-        validate(request);
-        
-        TariffTable tabela = new TariffTable();
-        tabela.setNome(request.name());
-        tabela.setDataVigencia(request.effectiveDate());
+    public UUID execute(TariffTableRequest request) {
+        validateRequest(request);
 
-        List<ConsumptionRange> faixas = request.consumptionRanges().stream()
-                .map(f -> mapToFaixa(f, tabela))
-                .toList();
-        
-        tabela.setFaixasConsumo(faixas);
-        
-        validateFaixasConsumo(faixas);
-        tabelaTarifariaRepository.save(tabela);
-    }
-
-    private void validate(TariffTableRequest request) {
-        ObjectUtils.requireNonNull(request, "tabelaTarifaria.notNull");
-        if (request.consumptionRanges() == null || request.consumptionRanges().isEmpty()) {
-            throw new ValidationException("tabelaTarifaria.faixas.empty");
-        }
-    }
-
-    private ConsumptionRange mapToFaixa(ConsumptionRangeRequest request, TariffTable tabela) {
-        ConsumptionRange faixa = new ConsumptionRange();
-        faixa.setTariffTable(tabela);
-        faixa.setInicio(request.start());
-        faixa.setFim(request.end());
-        faixa.setValorUnitario(request.unitValue());
-
-        var catReq = request.consumerCategory();
-        if (catReq == null) {
-            throw new ValidationException("faixa.categoria.notNull");
-        }
-
-        ConsumerCategory categoria;
-        if (catReq.id() != null) {
-            categoria = consumerCategoryRepository.findById(catReq.id())
-                    .orElseThrow(() -> new ResourceNotFoundException("categoria.notFound"));
-        } else if (catReq.name() != null) {
-            categoria = consumerCategoryRepository.findByNome(catReq.name())
-                    .orElseGet(() -> consumerCategoryRepository.save(new ConsumerCategory(catReq.name())));
-        } else {
-            throw new ValidationException("categoria.invalid");
+        if (tariffTableRepository.existsByEffectiveDate(request.effectiveDate())) {
+            throw new ValidationException("tariffTable.date.alreadyExists");
         }
         
-        faixa.setConsumerCategory(categoria);
-        return faixa;
+        TariffTable tariffTable = new TariffTable();
+        tariffTable.setName(request.name());
+        tariffTable.setEffectiveDate(request.effectiveDate());
+
+        Map<String, ConsumerCategory> categories = resolveCategories(request.categories());
+
+        List<ConsumptionRange> ranges = request.categories().stream()
+                .flatMap(catReq -> catReq.ranges().stream()
+                        .map(rangeReq -> mapToRange(rangeReq, tariffTable, categories.get(catReq.name()))))
+                .collect(Collectors.toList());
+        
+        tariffTable.setConsumptionRanges(ranges);
+        
+        validateConsumptionRanges(ranges);
+        TariffTable saved = tariffTableRepository.save(tariffTable);
+        return saved.getId();
     }
 
-    private void validateFaixasConsumo(List<ConsumptionRange> faixas) {
-        Map<ConsumerCategory, List<ConsumptionRange>> faixasPorCategoria = faixas.stream()
-                .collect(Collectors.groupingBy(ConsumptionRange::getConsumerCategory));
-
-        for (List<ConsumptionRange> faixasDaCategoria : faixasPorCategoria.values()) {
-            faixasDaCategoria.sort(Comparator.comparing(ConsumptionRange::getInicio));
-
-            validateOrderAndCoverage(faixasDaCategoria);
+    private void validateRequest(TariffTableRequest request) {
+        ObjectUtils.requireNonNull(request, "tariffTable.notNull");
+        if (request.categories() == null || request.categories().isEmpty()) {
+            throw new ValidationException("tariffTable.ranges.empty");
         }
     }
 
-    private void validateOrderAndCoverage(List<ConsumptionRange> faixas) {
-        if (faixas.get(0).getInicio() != 0) {
-            throw new ValidationException("faixa.start.zero");
+    private Map<String, ConsumerCategory> resolveCategories(List<CategoryRequest> categoryRequests) {
+        return categoryRequests.stream()
+                .map(CategoryRequest::name)
+                .distinct()
+                .collect(Collectors.toMap(
+                        name -> name,
+                        name -> consumerCategoryRepository.findByName(name)
+                                .orElseGet(() -> consumerCategoryRepository.save(ConsumerCategory.builder().name(name).build()))
+                ));
+    }
+
+    private ConsumptionRange mapToRange(RangeRequest request, TariffTable tariffTable, ConsumerCategory category) {
+        return ConsumptionRange.builder()
+                .tariffTable(tariffTable)
+                .consumerCategory(category)
+                .start(request.start())
+                .end(request.end())
+                .unitValue(request.unitValue())
+                .build();
+    }
+
+    private void validateConsumptionRanges(List<ConsumptionRange> ranges) {
+        ranges.stream()
+              .collect(Collectors.groupingBy(ConsumptionRange::getConsumerCategory))
+              .values()
+              .forEach(this::validateCategoryRanges);
+    }
+
+    private void validateCategoryRanges(List<ConsumptionRange> categoryRanges) {
+        categoryRanges.sort(Comparator.comparing(ConsumptionRange::getStart));
+
+        if (categoryRanges.isEmpty() || categoryRanges.get(0).getStart() != 0) {
+            throw new ValidationException("range.start.zero");
         }
 
-        for (int i = 0; i < faixas.size(); i++) {
-            ConsumptionRange current = faixas.get(i);
-            if (current.getInicio() >= current.getFim()) {
-                throw new ValidationException("faixa.invalidRange");
-            }
+        IntStream.range(1, categoryRanges.size()).forEach(i -> {
+            ConsumptionRange prev = categoryRanges.get(i - 1);
+            ConsumptionRange curr = categoryRanges.get(i);
+            
+            if (curr.getStart() >= curr.getEnd()) throw new ValidationException("range.invalidRange");
+            if (curr.getStart() <= prev.getEnd()) throw new ValidationException("range.overlap");
+            if (curr.getStart() != prev.getEnd() + 1) throw new ValidationException("range.gap");
+        });
 
-            if (i < faixas.size() - 1) {
-                ConsumptionRange next = faixas.get(i + 1);
-                if (current.getFim() >= next.getInicio()) {
-                    throw new ValidationException("faixa.overlap");
-                }
-                if (current.getFim() + 1 != next.getInicio()) {
-                    throw new ValidationException("faixa.gap");
-                }
-            } else {
-                if (current.getFim() < 99999) {
-                    throw new ValidationException("faixa.insufficientCoverage");
-                }
-            }
+        if (categoryRanges.get(categoryRanges.size() - 1).getEnd() < 99999) {
+            throw new ValidationException("range.insufficientCoverage");
         }
     }
 }
