@@ -1,4 +1,4 @@
-package gruporas.dttabelatarifaagua.user.core;
+package gruporas.dttabelatarifaagua.user.core.usecases;
 
 import gruporas.dttabelatarifaagua.shared.exception.ValidationException;
 import gruporas.dttabelatarifaagua.shared.usecase.UseCase;
@@ -40,8 +40,25 @@ public class CreateUserUseCase implements UseCase<CreateUserRequest, UUID> {
 
     private void validateRequest(CreateUserRequest request) {
         ObjectUtils.requireNonNull(request, "user.notNull");
-        if (request.email() == null || !request.email().endsWith("@gruporas.com.br")) {
+        ObjectUtils.requireNonNull(request.username(), "user.username.notNull");
+        ObjectUtils.requireNonNull(request.email(), "user.email.notNull");
+        ObjectUtils.requireNonNull(request.cpf(), "user.cpf.notNull");
+        ObjectUtils.requireNonNull(request.password(), "user.password.notNull");
+        ObjectUtils.requireNonNull(request.firstName(), "user.firstName.notNull");
+        ObjectUtils.requireNonNull(request.lastName(), "user.lastName.notNull");
+        ObjectUtils.requireNonNull(request.role(), "user.role.notNull");
+
+        if (!request.email().endsWith("@gruporas.com.br")) {
             throw new ValidationException("user.email.invalidDomain");
+        }
+        if (userRepository.existsByEmail(request.email())) {
+            throw new ValidationException("user.email.alreadyExists");
+        }
+        if (userRepository.existsByUsername(request.username())) {
+            throw new ValidationException("user.username.alreadyExists");
+        }
+        if (userRepository.existsByCpf(request.cpf())) {
+            throw new ValidationException("user.cpf.alreadyExists");
         }
     }
 }

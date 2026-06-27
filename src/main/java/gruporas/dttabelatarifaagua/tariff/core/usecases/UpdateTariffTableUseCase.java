@@ -33,12 +33,12 @@ public class UpdateTariffTableUseCase implements UseCase<UpdateTariffTableReques
     }
 
     private TariffTableResponse mapToResponse(TariffTable t) {
-        List<gruporas.dttabelatarifaagua.tariff.internal.web.dto.ConsumptionRangeResponse> consumptionRanges = (t.getConsumptionRanges() == null) 
+        List<gruporas.dttabelatarifaagua.tariff.web.dto.ConsumptionRangeResponse> consumptionRanges = (t.getConsumptionRanges() == null) 
                 ? Collections.emptyList() 
                 : t.getConsumptionRanges().stream()
-                .map(f -> new gruporas.dttabelatarifaagua.tariff.internal.web.dto.ConsumptionRangeResponse(
+                .map(f -> new gruporas.dttabelatarifaagua.tariff.web.dto.ConsumptionRangeResponse(
                         f.getId(),
-                        new gruporas.dttabelatarifaagua.tariff.internal.web.dto.ConsumerCategoryResponse(f.getConsumerCategory().getId(), f.getConsumerCategory().getName()),
+                        new gruporas.dttabelatarifaagua.tariff.web.dto.ConsumerCategoryResponse(f.getConsumerCategory().getId(), f.getConsumerCategory().getName()),
                         f.getStart(),
                         f.getEnd(),
                         f.getUnitValue()

@@ -58,9 +58,9 @@ public class ListTariffTablesUseCase implements UseCase<TariffTableFilter, PageR
 
     private TariffTableResponse mapToResponse(TariffTable t) {
         var ranges = t.getConsumptionRanges().stream()
-                .map(r -> new gruporas.dttabelatarifaagua.tariff.internal.web.dto.ConsumptionRangeResponse(
+                .map(r -> new gruporas.dttabelatarifaagua.tariff.web.dto.ConsumptionRangeResponse(
                         r.getId(),
-                        new gruporas.dttabelatarifaagua.tariff.internal.web.dto.ConsumerCategoryResponse(r.getConsumerCategory().getId(), r.getConsumerCategory().getName()),
+                        new gruporas.dttabelatarifaagua.tariff.web.dto.ConsumerCategoryResponse(r.getConsumerCategory().getId(), r.getConsumerCategory().getName()),
                         r.getStart(),
                         r.getEnd(),
                         r.getUnitValue()

@@ -1,11 +1,11 @@
 package gruporas.dttabelatarifaagua.tariff.core.usecases;
 
+import gruporas.dttabelatarifaagua.shared.exception.ValidationException;
 import gruporas.dttabelatarifaagua.tariff.persistence.model.ConsumerCategory;
 import gruporas.dttabelatarifaagua.tariff.persistence.model.ConsumptionRange;
 import gruporas.dttabelatarifaagua.tariff.persistence.model.TariffTable;
 import gruporas.dttabelatarifaagua.tariff.persistence.repository.ConsumerCategoryRepository;
 import gruporas.dttabelatarifaagua.tariff.persistence.repository.TariffTableRepository;
-import gruporas.dttabelatarifaagua.shared.exception.ValidationException;
 import gruporas.dttabelatarifaagua.shared.usecase.UseCase;
 import gruporas.dttabelatarifaagua.shared.utils.ObjectUtils;
 import gruporas.dttabelatarifaagua.tariff.web.dto.CategoryRequest;
@@ -55,6 +55,9 @@ public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUI
 
     private void validateRequest(TariffTableRequest request) {
         ObjectUtils.requireNonNull(request, "tariffTable.notNull");
+        ObjectUtils.requireNonNull(request.name(), "tariffTable.name.notNull");
+        ObjectUtils.requireNonNull(request.effectiveDate(), "tariffTable.effectiveDate.notNull");
+        
         if (request.categories() == null || request.categories().isEmpty()) {
             throw new ValidationException("tariffTable.ranges.empty");
         }

@@ -1,5 +1,6 @@
 package gruporas.dttabelatarifaagua.infrastructure.config;
 
+import gruporas.dttabelatarifaagua.shared.utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -29,13 +30,13 @@ public class I18nConfig {
             public Locale resolveLocale(HttpServletRequest request) {
                 String headerLang = request.getHeader("Accept-Language");
 
-                if (org.springframework.util.StringUtils.isBlank(headerLang)) {
+                if (StringUtils.isBlank(headerLang)) {
                     return Locale.ENGLISH;
                 }
 
                 Locale locale = Locale.forLanguageTag(headerLang);
                 if (locale.getLanguage().equalsIgnoreCase("pt")) {
-                    return Locale.of("pt");
+                    return new Locale("pt");
                 }
 
                 return Locale.ENGLISH;

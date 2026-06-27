@@ -1,4 +1,4 @@
-package gruporas.dttabelatarifaagua.core.model;
+package gruporas.dttabelatarifaagua.tariff.core.model;
 
 import gruporas.dttabelatarifaagua.shared.pagination.Filter;
 import gruporas.dttabelatarifaagua.shared.pagination.Pageable;
@@ -6,7 +6,6 @@ import lombok.Getter;
 
 @Getter
 public class TariffTableFilter extends Filter {
-    private static final int MAX_PAGE_SIZE = 60;
     private final String category;
 
     public TariffTableFilter(String category, Pageable pageable) {
@@ -16,6 +15,6 @@ public class TariffTableFilter extends Filter {
 
     @Override
     public int getMaxPageSize() {
-        return MAX_PAGE_SIZE;
+        return 10;
     }
 }
