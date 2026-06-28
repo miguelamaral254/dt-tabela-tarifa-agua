@@ -1,13 +1,15 @@
 package gruporas.dttabelatarifaagua.tariff.core.usecases;
 
+import gruporas.dttabelatarifaagua.auth.core.usecases.GetAuthenticatedUserUseCase;
+
 import gruporas.dttabelatarifaagua.shared.exception.ValidationException;
+import gruporas.dttabelatarifaagua.shared.usecase.UseCase;
+import gruporas.dttabelatarifaagua.shared.utils.ObjectUtils;
 import gruporas.dttabelatarifaagua.tariff.persistence.model.ConsumerCategory;
 import gruporas.dttabelatarifaagua.tariff.persistence.model.ConsumptionRange;
 import gruporas.dttabelatarifaagua.tariff.persistence.model.TariffTable;
 import gruporas.dttabelatarifaagua.tariff.persistence.repository.ConsumerCategoryRepository;
 import gruporas.dttabelatarifaagua.tariff.persistence.repository.TariffTableRepository;
-import gruporas.dttabelatarifaagua.shared.usecase.UseCase;
-import gruporas.dttabelatarifaagua.shared.utils.ObjectUtils;
 import gruporas.dttabelatarifaagua.tariff.web.dto.CategoryRequest;
 import gruporas.dttabelatarifaagua.tariff.web.dto.RangeRequest;
 import gruporas.dttabelatarifaagua.tariff.web.dto.TariffTableRequest;
@@ -25,6 +27,7 @@ public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUI
 
     private final TariffTableRepository tariffTableRepository;
     private final ConsumerCategoryRepository consumerCategoryRepository;
+    private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
 
     @Transactional
     @Override
@@ -35,9 +38,12 @@ public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUI
             throw new ValidationException("tariffTable.date.alreadyExists");
         }
         
+        var user = getAuthenticatedUserUseCase.execute();
+        
         TariffTable tariffTable = new TariffTable();
         tariffTable.setName(request.name());
         tariffTable.setEffectiveDate(request.effectiveDate());
+        tariffTable.setCreatedBy(user.id());
 
         Map<String, ConsumerCategory> categories = resolveCategories(request.categories());
 

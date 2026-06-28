@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ public class UserController {
     private final GetUserByIdUseCase getUserByIdUseCase;
 
     @PostMapping
-    public ResponseEntity<UUID> create(@RequestBody CreateUserRequest request) {
+    public ResponseEntity<UUID> create(@Valid @RequestBody CreateUserRequest request) {
         UUID userId = createUserUseCase.execute(request);
         return new ResponseEntity<>(userId, HttpStatus.CREATED);
     }

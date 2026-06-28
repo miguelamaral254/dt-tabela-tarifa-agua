@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -28,20 +27,21 @@ public class CalculateWaterTariffUseCase implements UseCase<TariffCalculationReq
             throw new ResourceNotFoundException("tariff.notFound");
         }
 
-        BigDecimal totalValue = BigDecimal.ZERO;
-        var detailResponses = new ArrayList<TariffCalculationDetailResponse>();
+        var detailResponses = detailsProjections.stream()
+                .map(p -> {
+                    BigDecimal subtotal = p.getSubtotal().setScale(2, RoundingMode.HALF_UP);
+                    return new TariffCalculationDetailResponse(
+                            new RangeResponse(p.getStart(), p.getEnd()),
+                            p.getConsumedM3(),
+                            p.getUnitValue().setScale(2, RoundingMode.HALF_UP),
+                            subtotal
+                    );
+                })
+                .toList();
 
-        for (var p : detailsProjections) {
-            BigDecimal subtotal = p.getSubtotal().setScale(2, RoundingMode.HALF_UP);
-            totalValue = totalValue.add(subtotal);
-
-            detailResponses.add(new TariffCalculationDetailResponse(
-                    new RangeResponse(p.getStart(), p.getEnd()),
-                    p.getConsumedM3(),
-                    p.getUnitValue().setScale(2, RoundingMode.HALF_UP),
-                    subtotal
-            ));
-        }
+        BigDecimal totalValue = detailResponses.stream()
+                .map(TariffCalculationDetailResponse::subtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new TariffCalculationResponse(request.category(), request.consumption(), totalValue.setScale(2, RoundingMode.HALF_UP), detailResponses);
     }

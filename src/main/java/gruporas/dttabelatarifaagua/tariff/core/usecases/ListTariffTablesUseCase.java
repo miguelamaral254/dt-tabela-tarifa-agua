@@ -8,6 +8,10 @@ import gruporas.dttabelatarifaagua.shared.usecase.UseCase;
 import gruporas.dttabelatarifaagua.shared.utils.ObjectUtils;
 import gruporas.dttabelatarifaagua.tariff.core.model.TariffTableFilter;
 import gruporas.dttabelatarifaagua.tariff.web.dto.TariffTableResponse;
+import gruporas.dttabelatarifaagua.tariff.web.dto.ConsumptionRangeResponse;
+import gruporas.dttabelatarifaagua.tariff.web.dto.ConsumerCategoryResponse;
+import gruporas.dttabelatarifaagua.tariff.web.dto.CreatedByResponse;
+import gruporas.dttabelatarifaagua.user.persistence.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -22,8 +26,6 @@ public class ListTariffTablesUseCase implements UseCase<TariffTableFilter, PageR
     public PageResult<TariffTableResponse> execute(TariffTableFilter filter) {
         validate(filter);
 
-        // For now, we use the standard findAll with pagination. 
-        // If category filter is provided, we'll filter the results in memory or add a repository method.
         Page<TariffTable> page = tariffTableRepository.findAll(filter.getPageable().toPageRequest());
         
         var content = page.getContent().stream()
@@ -58,14 +60,19 @@ public class ListTariffTablesUseCase implements UseCase<TariffTableFilter, PageR
 
     private TariffTableResponse mapToResponse(TariffTable t) {
         var ranges = t.getConsumptionRanges().stream()
-                .map(r -> new gruporas.dttabelatarifaagua.tariff.web.dto.ConsumptionRangeResponse(
+                .map(r -> new ConsumptionRangeResponse(
                         r.getId(),
-                        new gruporas.dttabelatarifaagua.tariff.web.dto.ConsumerCategoryResponse(r.getConsumerCategory().getId(), r.getConsumerCategory().getName()),
+                        new ConsumerCategoryResponse(r.getConsumerCategory().getId(), r.getConsumerCategory().getName()),
                         r.getStart(),
                         r.getEnd(),
                         r.getUnitValue()
                 )).toList();
+        
+        User creator = t.getCreator();
+        CreatedByResponse createdBy = new CreatedByResponse(
+                creator.getId(), creator.getUsername(), creator.getFirstName(), creator.getLastName()
+        );
                 
-        return new TariffTableResponse(t.getId(), t.getName(), t.getEffectiveDate(), ranges);
+        return new TariffTableResponse(t.getId(), t.getName(), t.getEffectiveDate(), createdBy, ranges);
     }
 }

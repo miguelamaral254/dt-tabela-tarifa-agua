@@ -47,11 +47,16 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                                                                   HttpHeaders headers,
                                                                   HttpStatusCode status,
                                                                   WebRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        problemDetail.setTitle("Invalid Request Body");
-        problemDetail.setDetail("The request body is invalid or could not be parsed. Please verify the JSON syntax and field types");
+        String title = getLocalizedMessage(VALIDATION_ERROR_TITLE);
+        String detail = "The request body is invalid or could not be parsed. Please verify the JSON syntax and field types";
 
-        return ResponseEntity.status(status).body(new ApiProblemDetail(problemDetail));
+        if (ex.getCause() instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException cause) {
+            String fieldName = cause.getPath().get(0).getFieldName();
+            detail = String.format("Invalid value for field '%s'. Please check the allowed values.", fieldName);
+        }
+
+        ApiErrorResponse error = new ApiErrorResponse(title, HttpStatus.BAD_REQUEST.value(), detail);
+        return ResponseEntity.status(status).body(error);
     }
 
     @Override
@@ -76,6 +81,14 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handle(EntityNotFoundException ex) {
+        String title = getLocalizedMessage("error.notFound");
+        String detail = getLocalizedMessage(ex.getCode());
+        ApiErrorResponse error = new ApiErrorResponse(title, HttpStatus.NOT_FOUND.value(), detail);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handle(ResourceNotFoundException ex) {
         String title = getLocalizedMessage("error.notFound");
         String detail = getLocalizedMessage(ex.getCode());
         ApiErrorResponse error = new ApiErrorResponse(title, HttpStatus.NOT_FOUND.value(), detail);

@@ -5,11 +5,12 @@ import gruporas.dttabelatarifaagua.auth.core.ports.TokenProvider;
 import gruporas.dttabelatarifaagua.shared.usecase.NullaryUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
+import gruporas.dttabelatarifaagua.shared.utils.ObjectUtils;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -20,9 +21,10 @@ public class GetAuthenticatedUserUseCase implements NullaryUseCase<UserBasic> {
 
     @Override
     public UserBasic execute() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (Objects.isNull(authentication) || !authentication.isAuthenticated()) {
+        ObjectUtils.requireNonNull(authentication, "auth.unauthenticated");
+        if (!authentication.isAuthenticated()) {
             throw new AccessDeniedException("Unauthenticated user");
         }
 

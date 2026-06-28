@@ -2,6 +2,7 @@ package gruporas.dttabelatarifaagua.tariff.persistence.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.github.f4b6a3.uuid.UuidCreator;
+import gruporas.dttabelatarifaagua.user.persistence.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,6 +33,13 @@ public class TariffTable {
     @Column(name = "effective_date", nullable = false)
     private LocalDate effectiveDate;
 
+    @Column(name = "created_by", nullable = false, updatable = false)
+    private UUID createdBy;
+
+    @ManyToOne
+    @JoinColumn(name = "created_by", nullable = false, insertable = false, updatable = false)
+    private User creator;
+
     @OneToMany(mappedBy = "tariffTable", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<ConsumptionRange> consumptionRanges;
@@ -43,3 +51,4 @@ public class TariffTable {
         }
     }
 }
+

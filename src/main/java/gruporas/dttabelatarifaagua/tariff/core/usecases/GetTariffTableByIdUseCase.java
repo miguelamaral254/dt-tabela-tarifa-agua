@@ -7,6 +7,8 @@ import gruporas.dttabelatarifaagua.shared.usecase.UseCase;
 import gruporas.dttabelatarifaagua.tariff.web.dto.ConsumerCategoryResponse;
 import gruporas.dttabelatarifaagua.tariff.web.dto.ConsumptionRangeResponse;
 import gruporas.dttabelatarifaagua.tariff.web.dto.TariffTableResponse;
+import gruporas.dttabelatarifaagua.tariff.web.dto.CreatedByResponse;
+import gruporas.dttabelatarifaagua.user.persistence.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +37,12 @@ public class GetTariffTableByIdUseCase implements UseCase<UUID, TariffTableRespo
                         r.getEnd(),
                         r.getUnitValue()
                 )).toList();
+        
+        User creator = t.getCreator();
+        CreatedByResponse createdBy = new CreatedByResponse(
+                creator.getId(), creator.getUsername(), creator.getFirstName(), creator.getLastName()
+        );
                 
-        return new TariffTableResponse(t.getId(), t.getName(), t.getEffectiveDate(), ranges);
+        return new TariffTableResponse(t.getId(), t.getName(), t.getEffectiveDate(), createdBy, ranges);
     }
 }

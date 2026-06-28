@@ -24,9 +24,9 @@ public class TariffTableController {
     private final DeleteTariffTableUseCase deleteTariffTableUseCase;
 
     @PostMapping
-    public ResponseEntity<Void> create(@RequestBody TariffTableRequest request) {
-        createTariffTableUseCase.execute(request);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<UUID> create(@RequestBody TariffTableRequest request) {
+        UUID id = createTariffTableUseCase.execute(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
     @GetMapping

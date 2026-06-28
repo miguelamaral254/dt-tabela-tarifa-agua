@@ -29,6 +29,7 @@ public class AuthenticateUserUseCase implements UseCase<LoginRequest, String> {
         }
 
         Map<String, Object> claims = Map.of(
+                "oid", user.getId().toString(),
                 "username", user.getUsername(),
                 "email", user.getEmail(),
                 "firstName", user.getFirstName(),
