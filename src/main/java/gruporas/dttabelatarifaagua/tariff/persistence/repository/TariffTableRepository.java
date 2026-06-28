@@ -37,6 +37,7 @@ public interface TariffTableRepository extends JpaRepository<TariffTable, UUID> 
             JOIN consumption_range cr ON cr.tariff_table_id = tt.id
             JOIN consumer_category cc ON cr.consumer_category_id = cc.id
             WHERE tt.id = :id
+            ORDER BY cc.name ASC, cr.start_range ASC
             """, nativeQuery = true)
     List<TariffTableFullProjection> findByIdProjected(@Param("id") UUID id);
 
@@ -51,6 +52,7 @@ public interface TariffTableRepository extends JpaRepository<TariffTable, UUID> 
             JOIN consumption_range cr ON cr.tariff_table_id = tt.id
             JOIN consumer_category cc ON cr.consumer_category_id = cc.id
             WHERE tt.id = (SELECT id FROM tariff_table ORDER BY effective_date DESC LIMIT 1)
+            ORDER BY cc.name ASC, cr.start_range ASC
             """, nativeQuery = true)
     List<TariffTableFullProjection> findCurrentProjected();
 

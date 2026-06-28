@@ -1,36 +1,62 @@
 # dt-tabela-tarifa-agua
 
-Este projeto implementa uma API RESTful para gerenciar tabelas tarifárias de água e calcular tarifas com base em faixas de consumo por categoria.
+Este projeto implementa uma API RESTful para gerenciar tabelas tarifárias de água e realizar cálculos de tarifas com base em faixas de consumo configuráveis.
 
 ## Arquitetura do Projeto
 
-O projeto adota uma arquitetura de **Monólito Modular**, organizado em domínios funcionais para garantir desacoplamento e manutenibilidade.
+O sistema segue uma abordagem de **Monólito Modular**, onde cada domínio funcional é isolado em seu próprio módulo, garantindo baixo acoplamento e alta coesão.
 
-### Módulos Principais
-*   `auth`: Gerenciamento de autenticação e tokens (JWT).
-*   `tariff`: Domínio principal de tabelas tarifárias e cálculo de tarifas.
-*   `user`: Gerenciamento de usuários do sistema.
-*   `shared`: Componentes transversais.
+### Estrutura de Módulos
+*   `auth`: Gerenciamento de autenticação, JWT e segurança.
+*   `tariff`: Domínio principal contendo tabelas tarifárias, categorias e cálculo de tarifas.
+*   `user`: Gerenciamento de usuários e perfis.
+*   `shared`: Componentes reutilizáveis (paginação, exceções, validações, utilitários).
 
-### Estrutura de Camadas (por módulo)
-*   `web`: Camada de entrada (Controllers) e DTOs.
-*   `core`: Lógica de negócio (Use Cases).
-*   `infrastructure`: Persistência (Repositories) e configurações técnicas.
+---
 
 ## Instalação e Execução
 
 ### Pré-requisitos
-*   **JDK:** 17+ | **Gradle:** 8.x | **PostgreSQL:** 13+ | **Docker**
+*   **JDK:** 17 ou superior.
+*   **Gradle:** 8.x (wrapper incluso).
+*   **PostgreSQL:** 13 ou superior.
+*   **Docker e Docker Compose** (para o banco de dados).
 
-### Configuração e Execução
-1.  **DB:** `docker-compose up -d`
-2.  **Executar:** `./gradlew bootRun`
-A API estará em `http://localhost:8080`.
+### Passo a Passo
+1.  **Iniciar Banco de Dados:**
+    ```bash
+    docker-compose up -d
+    ```
+2.  **Configurar Variáveis:**
+    Verifique `src/main/resources/application.properties` para configurações de conexão.
+3.  **Executar Aplicação:**
+    ```bash
+    ./gradlew bootRun
+    ```
 
-## Fluxos Principais e Exemplos
+A API estará disponível em `http://localhost:8080`.
 
-### 1. Usuários e Autenticação
-*   **POST /api/v1/users**: Criação de usuário.
+---
+
+## Autenticação e Swagger
+
+1.  A aplicação possui um usuário administrador pré-populado na migração inicial:
+    *   **Email:** `joao.alguem@gruporas.com.br`
+    *   **Senha:** `senhaSegura123`
+2.  Para utilizar a API, faça login em `/api/v1/auth/login` para receber o token JWT.
+3.  **Swagger UI:** Acesse `http://localhost:8080/swagger-ui/index.html`.
+    *   Clique no botão **Authorize** (topo da página).
+    *   Insira `Bearer <seu-token-aqui>`.
+
+---
+
+## Endpoints da API
+
+### 1. Autenticação (`/api/v1/auth`)
+*   **POST /api/v1/auth/login**: Login.
+
+### 2. Usuários (`/api/v1/usuarios`)
+*   **POST /api/v1/usuarios**: Criação de usuário (Retorna o **ID** do usuário criado):
     ```json
     {
       "nomeUsuario": "joao.silva",
@@ -42,13 +68,9 @@ A API estará em `http://localhost:8080`.
       "perfil": "ADMIN"
     }
     ```
-*   **POST /api/v1/auth/login**: Autenticação.
-    ```json
-    { "email": "joao@gruporas.com.br", "senha": "senhaSegura123" }
-    ```
 
-### 2. Gerenciamento de Tabela Tarifária (`/api/v1/tariff-tables`)
-*   **POST**: Criação de nova tabela:
+### 3. Tabelas Tarifárias (`/api/v1/tabelas-tarifarias`)
+*   **POST /api/v1/tabelas-tarifarias**: Criar nova tabela (Retorna o **ID** do item criado e atribui ao usuario logado ao registro da tabela):
     ```json
     {
       "nome": "Tabela Tarifa 2026",
@@ -61,94 +83,90 @@ A API estará em `http://localhost:8080`.
             { "inicio": 11, "fim": 20, "valorUnitario": 5.00 },
             { "inicio": 21, "fim": 9999999, "valorUnitario": 7.00 }
           ]
-        },
-        {
-          "nome": "COMERCIAL",
-          "faixas": [
-            { "inicio": 0, "fim": 50, "valorUnitario": 6.00 },
-            { "inicio": 51, "fim": 9999999, "valorUnitario": 9.00 }
-          ]
-        },
-        {
-          "nome": "INDUSTRIAL",
-          "faixas": [
-            { "inicio": 0, "fim": 10, "valorUnitario": 1.00 },
-            { "inicio": 11, "fim": 20, "valorUnitario": 2.00 },
-            { "inicio": 21, "fim": 9999999, "valorUnitario": 3.00 }
-          ]
         }
       ]
     }
     ```
-
-*   **GET /api/v1/tariff-tables/{id}**: Detalhe completo (exemplo de resposta):
+*   **GET /api/v1/tabelas-tarifarias**: Lista tabelas (Resumo, sem faixas).
+    *   *Exemplo de retorno:*
     ```json
     {
-      "id": "7b9c1d0a-2e3f-4567-89ab-cdef01234567",
-      "nome": "Example Table - Valid",
-      "dataVigencia": "2024-01-01",
+      "content": [
+        {
+          "id": "8f5fee04-f363-4678-92ac-61ba35ee6402",
+          "nome": "Tabela Tarifa 2026",
+          "dataVigencia": "2026-01-01",
+          "criadoPor": { "id": "...", "username": "...", ... }
+        },
+        {
+          "id": "9z5fee04-f363-4638-92ac-61ba35ee6403",
+          "nome": "Tabela Tarifa 2025",
+          "dataVigencia": "2025-01-01",
+          "criadoPor": { "id": "...", "username": "...", ... }
+        }
+      ],
+      "currentPage": 0,
+       "totalPages": 5,
+       "totalElements": 10,
+       "pageSize": 2,
+       "isFirst": true,
+       "isLast": false
+    }
+    ```
+*   **GET /api/v1/tabelas-tarifarias/atual**: Retorna tabela vigente (completa):
+    ```json
+    {
+      "id": "7d1ecf0c-b108-4ea9-ab08-e2f1a87eccd7",
+      "nome": "Tabela Tarifária Vigente 2026",
+      "dataVigencia": "2026-06-27",
       "criadoPor": {
         "id": "1f172121-15e1-6461-88f3-2556ed32fbc5",
-        "username": "joao.silva",
-        "primeiroNome": "João",
-        "ultimoNome": "Silva"
+        "username": "admin_ras",
+        "primeiroNome": "Administrador",
+        "ultimoNome": "Sistema"
       },
       "faixasConsumo": [
         {
-          "id": "67ea926e-674f-4618-9e79-1cf34dea55e7",
-          "categoria": {
-            "id": "c235d221-e110-46c8-8e88-f4398195fa63",
-            "nome": "PARTICULAR"
-          },
+          "id": "f548be07-c762-4256-9987-f66eb7ea630d",
+          "categoria": { "id": "698c027f...", "nome": "INDUSTRIAL" },
           "inicio": 0,
           "fim": 10,
-          "valorUnitario": 3.5
+          "valorUnitario": "1.00"
         }
       ]
     }
     ```
+*   **GET /api/v1/tabelas-tarifarias/{id}**: Retorna detalhe completo de tabela específica.
 
-### 3. Cálculo de Tarifa (`/api/v1/calculations`)
-*   **POST**: Calcula o custo do consumo.
+### 4. Cálculo de Tarifa (`/api/v1/calculos`)
+*   **POST**: Calcular custo.
     ```json
-    { "categoria": "INDUSTRIAL", "consumo": 15 }
+    { "categoria": "INDUSTRIAL", "consumo": 18 }
     ```
-    **Exemplo de Resposta:**
+    *Exemplo de Resposta:*
     ```json
     {
       "categoria": "INDUSTRIAL",
-      "consumoTotal": 15,
-      "valorTotal": 20.00,
+      "consumoTotal": 18,
+      "valorTotal": "26.00",
       "detalhamento": [
         {
-          "faixa": {
-            "inicio": 0,
-            "fim": 10
-          },
+          "faixa": { "inicio": 0, "fim": 10 },
           "m3Cobrados": 10,
-          "valorUnitario": 1.00,
-          "subtotal": 10.00
+          "valorUnitario": "1.00",
+          "subtotal": "10.00"
         },
         {
-          "faixa": {
-            "inicio": 11,
-            "fim": 20
-          },
-          "m3Cobrados": 5,
-          "valorUnitario": 2.00,
-          "subtotal": 10.00
+          "faixa": { "inicio": 11, "fim": 20 },
+          "m3Cobrados": 8,
+          "valorUnitario": "2.00",
+          "subtotal": "16.00"
         }
       ]
     }
     ```
-    **Lógica de Cálculo:**
-    O endpoint `/api/v1/calculations` busca automaticamente a tabela tarifária que possui a `dataVigencia` mais recente em relação à data atual, garantindo que o cálculo utilize sempre as regras tarifárias corretas e atualizadas.
-
-## Entidades e Relacionamentos
-*   **`tariff_table`**: Tabela central de tarifas. Relacionada com `consumption_range` (1:N) e `users` (criada por).
-*   **`consumer_category`**: Tipos de categoria (PARTICULAR, COMERCIAL, etc).
-*   **`consumption_range`**: Define faixas e valores unitários. Relaciona `tariff_table` e `consumer_category`.
-*   **`users`**: Entidade de usuários com controle de acesso (perfil).
 
 ---
-*Documentação completa (Swagger):* `http://localhost:8080/swagger-ui/index.html`
+
+## Testando a Aplicação
+1.  **Testes Automatizados:** Execute `./gradlew test`.

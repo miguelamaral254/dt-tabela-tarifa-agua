@@ -18,7 +18,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1/usuarios")
 public class UserController {
 
     private final CreateUserUseCase createUserUseCase;

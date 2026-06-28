@@ -70,14 +70,22 @@ public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUI
     }
 
     private Map<String, ConsumerCategory> resolveCategories(List<CategoryRequest> categoryRequests) {
-        return categoryRequests.stream()
+        List<String> names = categoryRequests.stream()
                 .map(CategoryRequest::name)
                 .distinct()
-                .collect(Collectors.toMap(
-                        name -> name,
-                        name -> consumerCategoryRepository.findByName(name)
-                                .orElseGet(() -> consumerCategoryRepository.save(ConsumerCategory.builder().name(name).build()))
-                ));
+                .toList();
+
+        Map<String, ConsumerCategory> existingCategories = consumerCategoryRepository.findByNameIn(names).stream()
+                .collect(Collectors.toMap(ConsumerCategory::getName, c -> c));
+
+        names.stream()
+                .filter(name -> !existingCategories.containsKey(name))
+                .forEach(name -> {
+                    ConsumerCategory newCategory = consumerCategoryRepository.save(ConsumerCategory.builder().name(name).build());
+                    existingCategories.put(name, newCategory);
+                });
+
+        return existingCategories;
     }
 
     private ConsumptionRange mapToRange(RangeRequest request, TariffTable tariffTable, ConsumerCategory category) {

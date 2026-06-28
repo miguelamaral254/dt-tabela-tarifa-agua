@@ -15,4 +15,4 @@ public record ConsumptionRangeResponse(
     Integer end,
     @JsonProperty("valorUnitario")
     BigDecimal unitValue
-) {}
+    ) {}

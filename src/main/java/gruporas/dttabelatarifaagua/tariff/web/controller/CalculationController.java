@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/calculations")
+@RequestMapping("/api/v1/calculos")
 public class CalculationController {
 
     private final CalculateWaterTariffUseCase calculateWaterTariffUseCase;

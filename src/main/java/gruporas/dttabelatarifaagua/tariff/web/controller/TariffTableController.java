@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/tariff-tables")
+@RequestMapping("/api/v1/tabelas-tarifarias")
 public class TariffTableController {
 
     private final CreateTariffTableUseCase createTariffTableUseCase;
@@ -29,7 +29,7 @@ public class TariffTableController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
-    @GetMapping("/current")
+    @GetMapping("/atual")
     public ResponseEntity<TariffTableResponse> getCurrent() {
         var response = getCurrentTariffTableUseCase.execute();
         return ResponseEntity.ok(response);

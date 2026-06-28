@@ -6,11 +6,13 @@ import gruporas.dttabelatarifaagua.shared.exception.ValidationException;
 import gruporas.dttabelatarifaagua.shared.usecase.UseCase;
 import gruporas.dttabelatarifaagua.user.persistence.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthenticateUserUseCase implements UseCase<LoginRequest, String> {
@@ -21,10 +23,16 @@ public class AuthenticateUserUseCase implements UseCase<LoginRequest, String> {
 
     @Override
     public String execute(LoginRequest request) {
+        log.info("Tentando autenticar usuário: {}", request.email());
         var user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new ValidationException("user.notFound"));
+                .orElseThrow(() -> {
+                    log.warn("Usuário não encontrado: {}", request.email());
+                    return new ValidationException("user.notFound");
+                });
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+        boolean match = passwordEncoder.matches(request.password(), user.getPassword());
+
+        if (!match) {
             throw new ValidationException("user.invalidCredentials");
         }
 
