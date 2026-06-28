@@ -1,325 +1,193 @@
-# dt-tabela-tarifa-agua
+# Desafio Técnico - API de Tabela Tarifária de Água
+Este projeto implementa uma API RESTful para gerenciar tabelas tarifárias de água e realizar cálculos de tarifas com base em faixas de consumo configuráveis.
 
-Este projeto implementa uma API RESTful para gerenciar tabelas tarifárias de água e calcular tarifas com base em faixas de consumo por categoria.
+## Arquitetura do Projeto
+
+O sistema segue uma abordagem de **Monólito Modular**, onde cada domínio funcional é isolado em seu próprio módulo, garantindo baixo acoplamento e alta coesão.
+
+### Estrutura de Módulos
+*   `auth`: Gerenciamento de autenticação, JWT e segurança.
+*   `tariff`: Domínio principal contendo tabelas tarifárias, categorias e cálculo de tarifas.
+*   `user`: Gerenciamento de usuários e perfis.
+*   `shared`: Componentes reutilizáveis (paginação, exceções, validações, utilitários).
+
+---
 
 ## Instalação e Execução
 
 ### Pré-requisitos
+*   **JDK:** 17 ou superior.
+*   **Gradle:** 8.x (wrapper incluso).
+*   **PostgreSQL:** 13 ou superior.
+*   **Docker e Docker Compose** (para o banco de dados).
 
-Certifique-se de ter as seguintes ferramentas instaladas em seu ambiente:
-
-*   **Java Development Kit (JDK):** Versão 17 ou superior.
-*   **Gradle:** Versão 8.x (gerenciada pelo wrapper do projeto).
-*   **PostgreSQL:** Versão 13 ou superior.
-*   **Docker e Docker Compose:** Para fácil configuração do banco de dados (opcional, mas recomendado).
-
-### Configuração do Banco de Dados
-
-Este projeto utiliza PostgreSQL. A configuração padrão está definida em `src/main/resources/application.properties`.
-
-1.  **Usando Docker Compose (Recomendado):**
-    Navegue até a raiz do projeto e execute:
+### Passo a Passo
+1.  **Iniciar Banco de Dados:**
     ```bash
     docker-compose up -d
     ```
-    Isso iniciará um contêiner PostgreSQL na porta `5432`.
-
-2.  **Configuração Manual:**
-    Certifique-se de ter um banco de dados PostgreSQL configurado. Atualize `src/main/resources/application.properties` com as credenciais do seu banco de dados:
-
-    ```properties
-    spring.datasource.url=jdbc:postgresql://localhost:5432/dt_tabela_tarifa_agua
-    spring.datasource.username=seu_usuario
-    spring.datasource.password=sua_senha
-    spring.jpa.hibernate.ddl-auto=none
-    ```
-
-    O projeto utiliza [Flyway](https://flywaydb.org/) para gerenciar as migrações do banco de dados. As migrações serão aplicadas automaticamente na inicialização da aplicação.
-
-### Compilação e Execução da Aplicação
-
-1.  **Compilar o Projeto:**
-    ```bash
-    ./gradlew clean build
-    ```
-
-2.  **Executar a Aplicação:**
-    ```bash
-    java -jar build/libs/dt-tabela-tarifa-agua-0.0.1-SNAPSHOT.jar
-    ```
-    Ou, para executar via Gradle:
+2.  **Configurar Variáveis:**
+    Verifique `src/main/resources/application.properties` para configurações de conexão.
+3.  **Executar Aplicação:**
     ```bash
     ./gradlew bootRun
     ```
 
 A API estará disponível em `http://localhost:8080`.
 
-## Como Testar a Aplicação
+---
 
-Para executar os testes unitários e de integração:
+## Autenticação e Swagger
 
-```bash
-./gradlew test
-```
+1.  A aplicação possui um usuário administrador pré-populado na migração inicial:
+    *   **Email:** `joao.alguem@gruporas.com.br`
+    *   **Senha:** `senhaSegura123`
+2.  Para utilizar a API, faça login em `/api/v1/auth/login` para receber o token JWT.
+3.  **Swagger UI:** Acesse `http://localhost:8080/swagger-ui/index.html`.
+    *   Clique no botão **Authorize** (topo da página).
+    *   Insira `Bearer <seu-token-aqui>`.
+
+---
 
 ## Endpoints da API
 
-Todos os endpoints estão prefixados com `/api/v1`.
+### 1. Autenticação (`/api/v1/auth`)
+*   **POST /api/v1/auth/login**: Login.
 
-### 1. Gerenciamento de Tabela Tarifária (`/api/v1/tabelas-tarifarias`)
-
-#### `POST /api/v1/tabelas-tarifarias` - Criar Nova Tabela Tarifária
-
-Cria uma nova tabela tarifária com suas faixas de consumo associadas.
-
-*   **Request Body (JSON):** `TabelaTarifariaCreateUpdateDTO`
+### 2. Usuários (`/api/v1/usuarios`)
+*   **POST /api/v1/usuarios**: Criação de usuário (Retorna o **ID** do usuário criado):
     ```json
     {
-      "nome": "Tabela Tarifa Água 2024 - Exemplo",
-      "dataVigencia": "2024-01-01",
+      "nomeUsuario": "joao.silva",
+      "email": "joao@gruporas.com.br",
+      "cpf": "12345678901",
+      "senha": "senhaSegura123",
+      "primeiroNome": "João",
+      "ultimoNome": "Silva",
+      "perfil": "ADMIN"
+    }
+    ```
+
+### 3. Tabelas Tarifárias (`/api/v1/tabelas-tarifarias`)
+*   **POST /api/v1/tabelas-tarifarias**: Criar nova tabela (Retorna o **ID** do item criado e atribui o usuario logado ao registro da tabela):
+    ```json
+    {
+      "nome": "Tabela Tarifária Geral 2026",
+      "dataVigencia": "2026-01-01",
+      "categorias": [
+        {
+          "nome": "PARTICULAR",
+          "faixas": [
+            { "inicio": 0, "fim": 10, "valorUnitario": 3.50 },
+            { "inicio": 11, "fim": 20, "valorUnitario": 5.00 },
+            { "inicio": 21, "fim": 9999999, "valorUnitario": 7.00 }
+          ]
+        },
+        {
+          "nome": "COMERCIAL",
+          "faixas": [
+            { "inicio": 0, "fim": 50, "valorUnitario": 6.00 },
+            { "inicio": 51, "fim": 9999999, "valorUnitario": 9.00 }
+          ]
+        },
+        {
+          "nome": "INDUSTRIAL",
+          "faixas": [
+            { "inicio": 0, "fim": 10, "valorUnitario": 1.00 },
+            { "inicio": 11, "fim": 20, "valorUnitario": 2.00 },
+            { "inicio": 21, "fim": 9999999, "valorUnitario": 3.00 }
+          ]
+        },
+        {
+          "nome": "PÚBLICO",
+          "faixas": [
+            { "inicio": 0, "fim": 100, "valorUnitario": 2.50 },
+            { "inicio": 101, "fim": 9999999, "valorUnitario": 4.00 }
+          ]
+        }
+      ]
+    }
+    ```
+*   **GET /api/v1/tabelas-tarifarias**: Lista tabelas (Resumo, sem faixas).
+    *   *Exemplo de retorno:*
+    ```json
+    {
+      "content": [
+        {
+          "id": "8f5fee04-f363-4678-92ac-61ba35ee6402",
+          "nome": "Tabela Tarifa 2026",
+          "dataVigencia": "2026-01-01",
+          "criadoPor": { "id": "...", "username": "...", ... }
+        },
+        {
+          "id": "9z5fee04-f363-4638-92ac-61ba35ee6403",
+          "nome": "Tabela Tarifa 2025",
+          "dataVigencia": "2025-01-01",
+          "criadoPor": { "id": "...", "username": "...", ... }
+        }
+      ],
+      "currentPage": 0,
+       "totalPages": 5,
+       "totalElements": 10,
+       "pageSize": 2,
+       "isFirst": true,
+       "isLast": false
+    }
+    ```
+*   **GET /api/v1/tabelas-tarifarias/atual**: Retorna tabela vigente (completa):
+    ```json
+    {
+      "id": "7d1ecf0c-b108-4ea9-ab08-e2f1a87eccd7",
+      "nome": "Tabela Tarifária Vigente 2026",
+      "dataVigencia": "2026-06-27",
+      "criadoPor": {
+        "id": "1f172121-15e1-6461-88f3-2556ed32fbc5",
+        "username": "admin_ras",
+        "primeiroNome": "Administrador",
+        "ultimoNome": "Sistema"
+      },
       "faixasConsumo": [
         {
-          "categoriaConsumidor": { "nome": "PARTICULAR" },
+          "id": "f548be07-c762-4256-9987-f66eb7ea630d",
+          "categoria": { "id": "698c027f...", "nome": "INDUSTRIAL" },
           "inicio": 0,
           "fim": 10,
-          "valorUnitario": 3.50
-        },
-        {
-          "categoriaConsumidor": { "nome": "PARTICULAR" },
-          "inicio": 11,
-          "fim": 20,
-          "valorUnitario": 5.00
-        },
-        {
-          "categoriaConsumidor": { "nome": "PARTICULAR" },
-          "inicio": 21,
-          "fim": 999999,
-          "valorUnitario": 7.00
+          "valorUnitario": "1.00"
         }
       ]
     }
     ```
-*   **Response (Sucesso - 201 Created):** (Sem conteúdo no corpo)
-*   **Response (Erro de Validação - 400 Bad Request):**
+*   **GET /api/v1/tabelas-tarifarias/{id}**: Retorna detalhe completo de tabela específica.
+
+### 4. Cálculo de Tarifa (`/api/v1/calculos`)
+*   **POST**: Calcular custo.
     ```json
-    {
-      "message": "A primeira faixa de consumo deve iniciar em 0 m³."
-    }
+    { "categoria": "INDUSTRIAL", "consumo": 18 }
     ```
-*   **Response (Erro de Conflito - 409 Conflict):**
+    *Exemplo de Resposta:*
     ```json
     {
-      "message": "Há uma lacuna entre as faixas de consumo. Faixa 0-10 e faixa 12-20"
-    }
-    ```
-
-#### `GET /api/v1/tabelas-tarifarias` - Listar Todas as Tabelas Tarifárias
-
-Lista todas as tabelas tarifárias cadastradas.
-
-*   **Response (Sucesso - 200 OK):** `List<TabelaTarifariaResponseDTO>` (exemplo acima)
-
-#### `GET /api/v1/tabelas-tarifarias/{id}` - Obter Tabela Tarifária por ID
-
-Obtém os detalhes de uma tabela tarifária específica pelo seu ID.
-
-*   **Parâmetros de Path:**
-    *   `id`: UUID da tabela tarifária (ex: `a1b2c3d4-e5f6-7890-1234-567890abcdef`)
-*   **Response (Sucesso - 200 OK):** `TabelaTarifariaResponseDTO` (exemplo acima)
-*   **Response (Não Encontrado - 404 Not Found):**
-    ```json
-    {
-      "message": "Tabela Tarifária não encontrada com o id: [ID_INVALIDO]"
-    }
-    ```
-
-#### `PUT /api/v1/tabelas-tarifarias/{id}` - Atualizar Tabela Tarifária
-
-Atualiza informações de uma tabela tarifária existente. Atualmente, apenas `nome` e `dataVigencia` são atualizáveis via este endpoint. As faixas de consumo associadas não são modificadas por esta operação (requer implementação adicional se necessário).
-
-*   **Parâmetros de Path:**
-    *   `id`: UUID da tabela tarifária a ser atualizada.
-*   **Request Body (JSON):** `TabelaTarifariaCreateUpdateDTO`
-    ```json
-    {
-      "nome": "Tabela Tarifa Água 2025 (Atualizada)",
-      "dataVigencia": "2025-01-01",
-      "faixasConsumo": []
-    }
-    ```
-    *Nota: `faixasConsumo` pode ser enviado vazio ou com os dados existentes; o serviço irá ignorá-los na atualização de `nome` e `dataVigencia`.*
-*   **Response (Sucesso - 200 OK):** `TabelaTarifariaResponseDTO` (da tabela atualizada)
-
-#### `DELETE /api/v1/tabelas-tarifarias/{id}` - Excluir Tabela Tarifária
-
-Exclui uma tabela tarifária pelo seu ID.
-
-*   **Parâmetros de Path:**
-    *   `id`: UUID da tabela tarifária a ser excluída.
-*   **Response (Sucesso - 204 No Content)**
-
-### 2. Cálculo de Tarifa (`/api/calculos`)
-
-#### `POST /api/calculos` - Calcular Tarifa de Consumo
-
-Calcula o valor da tarifa de água para um determinado consumo e categoria, usando a tabela tarifária mais recente.
-
-*   **Request Body (JSON):** `TariffCalculationRequest`
-    ```json
-    {
-      "categoria": "PARTICULAR",
-      "consumo": 15
-    }
-    ```
-*   **Response (Sucesso - 200 OK):** `TariffCalculationResponse`
-    ```json
-    {
-      "categoria": "PARTICULAR",
-      "consumoTotal": 15,
-      "valorTotal": 60.50,
+      "categoria": "INDUSTRIAL",
+      "consumoTotal": 18,
+      "valorTotal": "26.00",
       "detalhamento": [
         {
-          "faixa": {
-            "inicio": 0,
-            "fim": 10
-          },
+          "faixa": { "inicio": 0, "fim": 10 },
           "m3Cobrados": 10,
-          "valorUnitario": 3.50,
-          "subtotal": 35.00
+          "valorUnitario": "1.00",
+          "subtotal": "10.00"
         },
         {
-          "faixa": {
-            "inicio": 11,
-            "fim": 20
-          },
-          "m3Cobrados": 5,
-          "valorUnitario": 5.00,
-          "subtotal": 25.50
+          "faixa": { "inicio": 11, "fim": 20 },
+          "m3Cobrados": 8,
+          "valorUnitario": "2.00",
+          "subtotal": "16.00"
         }
       ]
     }
     ```
-*   **Response (Erro - 404 Not Found):**
-    ```json
-    {
-      "message": "Nenhuma tabela de tarifa ativa encontrada."
-    }
-    ```
 
-## Documentação da API
+---
 
-A documentação interativa da API está disponível via Swagger UI no seguinte link:
-
-[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-
-## Scripts de Banco de Dados
-
-As migrações do banco de dados são gerenciadas pelo Flyway e estão localizadas em `src/main/resources/db/migration/`.
-
-### `V1__Create_initial_tables.sql`
-
-```sql
-CREATE TABLE tabela_tarifaria (
-    id UUID PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    data_vigencia DATE NOT NULL
-);
-
-CREATE TABLE categoria_consumidor (
-    id UUID PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL UNIQUE
-);
-
-CREATE TABLE faixa_consumo (
-    id UUID PRIMARY KEY,
-    tabela_tarifaria_id UUID NOT NULL,
-    categoria_consumidor_id UUID NOT NULL,
-    inicio INTEGER NOT NULL,
-    fim INTEGER NOT NULL,
-    valor_unitario NUMERIC(19, 2) NOT NULL,
-    FOREIGN KEY (tabela_tarifaria_id) REFERENCES tabela_tarifaria(id),
-    FOREIGN KEY (categoria_consumidor_id) REFERENCES categoria_consumidor(id),
-    UNIQUE (tabela_tarifaria_id, categoria_consumidor_id, inicio, fim)
-);
-
--- Inserir categorias de consumidor padrão (seed data)
-INSERT INTO categoria_consumidor (id, nome) VALUES
-(gen_random_uuid(), 'COMERCIAL'),
-(gen_random_uuid(), 'INDUSTRIAL'),
-(gen_random_uuid(), 'PARTICULAR'),
-(gen_random_uuid(), 'PÚBLICO');
-```
-
-### `V2__Insert_sample_data.sql` (Opcional - Dados de Exemplo)
-
-```sql
-INSERT INTO tabela_tarifaria (id, nome, data_vigencia)
-VALUES ('7b9c1d0a-2e3f-4567-89ab-cdef01234567', 'Tabela de Exemplo - Valida', '2024-01-01');
-
-INSERT INTO faixa_consumo (id, tabela_tarifaria_id, categoria_consumidor_id, inicio, fim, valor_unitario)
-VALUES
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'PARTICULAR'), 0, 10, 3.50),
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'PARTICULAR'), 11, 20, 5.00),
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'PARTICULAR'), 21, 9999999, 7.00),
-
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'COMERCIAL'), 0, 50, 6.00),
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'COMERCIAL'), 51, 9999999, 9.00),
-
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'INDUSTRIAL'), 0, 10, 1.00),
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'INDUSTRIAL'), 11, 20, 2.00),
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'INDUSTRIAL'), 21, 9999999, 3.00);
-
-As migrações do banco de dados são gerenciadas pelo Flyway e estão localizadas em `src/main/resources/db/migration/`.
-
-### `V1__Create_initial_tables.sql`
-
-```sql
-CREATE TABLE tabela_tarifaria (
-    id UUID PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    data_vigencia DATE NOT NULL
-);
-
-CREATE TABLE categoria_consumidor (
-    id UUID PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL UNIQUE
-);
-
-CREATE TABLE faixa_consumo (
-    id UUID PRIMARY KEY,
-    tabela_tarifaria_id UUID NOT NULL,
-    categoria_consumidor_id UUID NOT NULL,
-    inicio INTEGER NOT NULL,
-    fim INTEGER NOT NULL,
-    valor_unitario NUMERIC(19, 2) NOT NULL,
-    FOREIGN KEY (tabela_tarifaria_id) REFERENCES tabela_tarifaria(id),
-    FOREIGN KEY (categoria_consumidor_id) REFERENCES categoria_consumidor(id),
-    UNIQUE (tabela_tarifaria_id, categoria_consumidor_id, inicio, fim)
-);
-
--- Inserir categorias de consumidor padrão (seed data)
-INSERT INTO categoria_consumidor (id, nome) VALUES
-(gen_random_uuid(), 'COMERCIAL'),
-(gen_random_uuid(), 'INDUSTRIAL'),
-(gen_random_uuid(), 'PARTICULAR'),
-(gen_random_uuid(), 'PÚBLICO');
-```
-
-### `V2__Insert_sample_data.sql` (Opcional - Dados de Exemplo)
-
-```sql
-INSERT INTO tabela_tarifaria (id, nome, data_vigencia)
-VALUES ('7b9c1d0a-2e3f-4567-89ab-cdef01234567', 'Tabela de Exemplo - Valida', '2024-01-01');
-
-INSERT INTO faixa_consumo (id, tabela_tarifaria_id, categoria_consumidor_id, inicio, fim, valor_unitario)
-VALUES
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'PARTICULAR'), 0, 10, 3.50),
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'PARTICULAR'), 11, 20, 5.00),
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'PARTICULAR'), 21, 9999999, 7.00),
-
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'COMERCIAL'), 0, 50, 6.00),
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'COMERCIAL'), 51, 9999999, 9.00),
-
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'INDUSTRIAL'), 0, 10, 1.00),
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'INDUSTRIAL'), 11, 20, 2.00),
-(gen_random_uuid(), '7b9c1d0a-2e3f-4567-89ab-cdef01234567', (SELECT id FROM categoria_consumidor WHERE nome = 'INDUSTRIAL'), 21, 9999999, 3.00);
+## Testando a Aplicação
+1.  **Testes Automatizados:** Execute `./gradlew test`.

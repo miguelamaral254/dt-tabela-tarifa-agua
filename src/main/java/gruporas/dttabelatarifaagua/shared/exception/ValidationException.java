@@ -1,0 +1,22 @@
+package gruporas.dttabelatarifaagua.shared.exception;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+public class ValidationException extends RuntimeException {
+    private final String code;
+    private final Object[] args;
+
+    public ValidationException(String code) {
+        super(code);
+        this.code = code;
+        this.args = new Object[0];
+    }
+
+    public ValidationException(String code, Object... args) {
+        super(code);
+        this.code = code;
+        this.args = args;
+    }
+}
