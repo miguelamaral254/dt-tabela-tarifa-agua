@@ -4,7 +4,6 @@ import gruporas.dttabelatarifaagua.tariff.core.usecases.*;
 import gruporas.dttabelatarifaagua.shared.pagination.Pageable;
 import gruporas.dttabelatarifaagua.shared.pagination.PageResult;
 import gruporas.dttabelatarifaagua.tariff.web.dto.*;
-import gruporas.dttabelatarifaagua.tariff.core.model.TariffTableFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,12 +36,10 @@ public class TariffTableController {
 
     @GetMapping
     public ResponseEntity<PageResult<TariffTableSummaryResponse>> list(
-            @RequestParam(required = false) String category,
             @RequestParam(required = false, defaultValue = "0") int pageNumber,
             @RequestParam(required = false, defaultValue = "10") int pageSize) {
 
-        var filter = new TariffTableFilter(category, new Pageable(pageNumber, pageSize));
-        var result = listTariffTablesUseCase.execute(filter);
+        var result = listTariffTablesUseCase.execute(new Pageable(pageNumber, pageSize));
         return ResponseEntity.ok(result);
     }
 

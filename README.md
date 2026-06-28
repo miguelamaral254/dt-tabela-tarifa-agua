@@ -1,5 +1,4 @@
-# dt-tabela-tarifa-agua
-
+# Desafio Técnico - API de Tabela Tarifária de Água
 Este projeto implementa uma API RESTful para gerenciar tabelas tarifárias de água e realizar cálculos de tarifas com base em faixas de consumo configuráveis.
 
 ## Arquitetura do Projeto
@@ -70,10 +69,10 @@ A API estará disponível em `http://localhost:8080`.
     ```
 
 ### 3. Tabelas Tarifárias (`/api/v1/tabelas-tarifarias`)
-*   **POST /api/v1/tabelas-tarifarias**: Criar nova tabela (Retorna o **ID** do item criado e atribui ao usuario logado ao registro da tabela):
+*   **POST /api/v1/tabelas-tarifarias**: Criar nova tabela (Retorna o **ID** do item criado e atribui o usuario logado ao registro da tabela):
     ```json
     {
-      "nome": "Tabela Tarifa 2026",
+      "nome": "Tabela Tarifária Geral 2026",
       "dataVigencia": "2026-01-01",
       "categorias": [
         {
@@ -82,6 +81,28 @@ A API estará disponível em `http://localhost:8080`.
             { "inicio": 0, "fim": 10, "valorUnitario": 3.50 },
             { "inicio": 11, "fim": 20, "valorUnitario": 5.00 },
             { "inicio": 21, "fim": 9999999, "valorUnitario": 7.00 }
+          ]
+        },
+        {
+          "nome": "COMERCIAL",
+          "faixas": [
+            { "inicio": 0, "fim": 50, "valorUnitario": 6.00 },
+            { "inicio": 51, "fim": 9999999, "valorUnitario": 9.00 }
+          ]
+        },
+        {
+          "nome": "INDUSTRIAL",
+          "faixas": [
+            { "inicio": 0, "fim": 10, "valorUnitario": 1.00 },
+            { "inicio": 11, "fim": 20, "valorUnitario": 2.00 },
+            { "inicio": 21, "fim": 9999999, "valorUnitario": 3.00 }
+          ]
+        },
+        {
+          "nome": "PÚBLICO",
+          "faixas": [
+            { "inicio": 0, "fim": 100, "valorUnitario": 2.50 },
+            { "inicio": 101, "fim": 9999999, "valorUnitario": 4.00 }
           ]
         }
       ]
