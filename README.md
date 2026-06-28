@@ -188,6 +188,3 @@ A API estará disponível em `http://localhost:8080`.
     ```
 
 ---
-
-## Testando a Aplicação
-1.  **Testes Automatizados:** Execute `./gradlew test`.
