@@ -10,7 +10,9 @@ public record TariffCalculationDetailResponse(
     @JsonProperty("m3Cobrados")
     Integer consumedM3,
     @JsonProperty("valorUnitario")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.00")
     BigDecimal unitValue,
     @JsonProperty("subtotal")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.00")
     BigDecimal subtotal
 ) {}

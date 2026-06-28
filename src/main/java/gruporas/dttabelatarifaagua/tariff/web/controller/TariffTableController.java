@@ -20,7 +20,7 @@ public class TariffTableController {
     private final CreateTariffTableUseCase createTariffTableUseCase;
     private final ListTariffTablesUseCase listTariffTablesUseCase;
     private final GetTariffTableByIdUseCase getTariffTableByIdUseCase;
-    private final UpdateTariffTableUseCase updateTariffTableUseCase;
+    private final GetCurrentTariffTableUseCase getCurrentTariffTableUseCase;
     private final DeleteTariffTableUseCase deleteTariffTableUseCase;
 
     @PostMapping
@@ -29,8 +29,14 @@ public class TariffTableController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
+    @GetMapping("/current")
+    public ResponseEntity<TariffTableResponse> getCurrent() {
+        var response = getCurrentTariffTableUseCase.execute();
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping
-    public ResponseEntity<PageResult<TariffTableResponse>> list(
+    public ResponseEntity<PageResult<TariffTableSummaryResponse>> list(
             @RequestParam(required = false) String category,
             @RequestParam(required = false, defaultValue = "0") int pageNumber,
             @RequestParam(required = false, defaultValue = "10") int pageSize) {
@@ -43,13 +49,6 @@ public class TariffTableController {
     @GetMapping("/{id}")
     public ResponseEntity<TariffTableResponse> getById(@PathVariable UUID id) {
         var response = getTariffTableByIdUseCase.execute(id);
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<TariffTableResponse> update(@PathVariable UUID id, @RequestBody UpdateTariffTableRequest request) {
-        var updateRequest = new UpdateTariffTableRequest(id, request.name(), request.effectiveDate());
-        var response = updateTariffTableUseCase.execute(updateRequest);
         return ResponseEntity.ok(response);
     }
 

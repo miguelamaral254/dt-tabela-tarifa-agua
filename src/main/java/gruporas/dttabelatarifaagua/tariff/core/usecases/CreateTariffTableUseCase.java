@@ -37,9 +37,9 @@ public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUI
         if (tariffTableRepository.existsByEffectiveDate(request.effectiveDate())) {
             throw new ValidationException("tariffTable.date.alreadyExists");
         }
-        
+
         var user = getAuthenticatedUserUseCase.execute();
-        
+
         TariffTable tariffTable = new TariffTable();
         tariffTable.setName(request.name());
         tariffTable.setEffectiveDate(request.effectiveDate());
@@ -51,9 +51,9 @@ public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUI
                 .flatMap(catReq -> catReq.ranges().stream()
                         .map(rangeReq -> mapToRange(rangeReq, tariffTable, categories.get(catReq.name()))))
                 .collect(Collectors.toList());
-        
+
         tariffTable.setConsumptionRanges(ranges);
-        
+
         validateConsumptionRanges(ranges);
         TariffTable saved = tariffTableRepository.save(tariffTable);
         return saved.getId();
@@ -63,7 +63,7 @@ public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUI
         ObjectUtils.requireNonNull(request, "tariffTable.notNull");
         ObjectUtils.requireNonNull(request.name(), "tariffTable.name.notNull");
         ObjectUtils.requireNonNull(request.effectiveDate(), "tariffTable.effectiveDate.notNull");
-        
+
         if (request.categories() == null || request.categories().isEmpty()) {
             throw new ValidationException("tariffTable.ranges.empty");
         }
@@ -92,9 +92,9 @@ public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUI
 
     private void validateConsumptionRanges(List<ConsumptionRange> ranges) {
         ranges.stream()
-              .collect(Collectors.groupingBy(ConsumptionRange::getConsumerCategory))
-              .values()
-              .forEach(this::validateCategoryRanges);
+                .collect(Collectors.groupingBy(ConsumptionRange::getConsumerCategory))
+                .values()
+                .forEach(this::validateCategoryRanges);
     }
 
     private void validateCategoryRanges(List<ConsumptionRange> categoryRanges) {
@@ -107,7 +107,7 @@ public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUI
         IntStream.range(1, categoryRanges.size()).forEach(i -> {
             ConsumptionRange prev = categoryRanges.get(i - 1);
             ConsumptionRange curr = categoryRanges.get(i);
-            
+
             if (curr.getStart() >= curr.getEnd()) throw new ValidationException("range.invalidRange");
             if (curr.getStart() <= prev.getEnd()) throw new ValidationException("range.overlap");
             if (curr.getStart() != prev.getEnd() + 1) throw new ValidationException("range.gap");
