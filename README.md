@@ -169,19 +169,19 @@ A API estará disponível em `http://localhost:8080`.
     {
       "categoria": "INDUSTRIAL",
       "consumoTotal": 18,
-      "valorTotal": "26.00",
+      "valorTotal": 26,
       "detalhamento": [
         {
           "faixa": { "inicio": 0, "fim": 10 },
           "m3Cobrados": 10,
-          "valorUnitario": "1.00",
-          "subtotal": "10.00"
+          "valorUnitario": 1,
+          "subtotal": 10
         },
         {
           "faixa": { "inicio": 11, "fim": 20 },
           "m3Cobrados": 8,
-          "valorUnitario": "2.00",
-          "subtotal": "16.00"
+          "valorUnitario": 2,
+          "subtotal": 16
         }
       ]
     }

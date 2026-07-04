@@ -12,7 +12,6 @@ public record TariffCalculationResponse(
     Integer totalConsumption,
 
     @JsonProperty("valorTotal")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.00")
     BigDecimal totalValue,
     @JsonProperty("detalhamento")
     List<TariffCalculationDetailResponse> details
