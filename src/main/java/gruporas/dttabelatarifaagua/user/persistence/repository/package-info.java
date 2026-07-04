@@ -1,2 +1,2 @@
-@org.springframework.modulith.NamedInterface("shared")
-package gruporas.dttabelatarifaagua.shared.exception;
+@org.springframework.modulith.NamedInterface("user-repository")
+package gruporas.dttabelatarifaagua.user.persistence.repository;

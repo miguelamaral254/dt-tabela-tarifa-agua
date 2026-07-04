@@ -1,2 +1,2 @@
-@org.springframework.modulith.NamedInterface("user-repository")
-package gruporas.dttabelatarifaagua.user.persistence.repository;
+@org.springframework.modulith.NamedInterface("shared-problem-detail")
+package gruporas.dttabelatarifaagua.shared.factory;
