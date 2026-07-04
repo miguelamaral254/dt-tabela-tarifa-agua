@@ -34,6 +34,16 @@ public class JwtTokenProvider implements TokenProvider {
     }
 
     @Override
+    public String extractSubject(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+
+    @Override
     public Map<String, Object> extractClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())

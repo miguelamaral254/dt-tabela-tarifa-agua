@@ -36,15 +36,8 @@ public class AuthenticateUserUseCase implements UseCase<LoginRequest, String> {
             throw new ValidationException("user.invalidCredentials");
         }
 
-        Map<String, Object> claims = Map.of(
-                "oid", user.getId().toString(),
-                "username", user.getUsername(),
-                "email", user.getEmail(),
-                "firstName", user.getFirstName(),
-                "lastName", user.getLastName(),
-                "role", user.getRole().name()
-        );
+        Map<String, Object> claims = Map.of();
 
-        return tokenProvider.generateToken(claims, user.getUsername());
+        return tokenProvider.generateToken(claims, user.getId().toString());
     }
 }
