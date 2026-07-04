@@ -40,19 +40,21 @@ public class CreateTariffTableUseCase implements UseCase<TariffTableRequest, UUI
 
         var user = getAuthenticatedUserUseCase.execute();
 
-        TariffTable tariffTable = new TariffTable();
-        tariffTable.setName(request.name());
-        tariffTable.setEffectiveDate(request.effectiveDate());
-        tariffTable.setCreatedBy(user.id());
-
         Map<String, ConsumerCategory> categories = resolveCategories(request.categories());
 
         List<ConsumptionRange> ranges = request.categories().stream()
                 .flatMap(catReq -> catReq.ranges().stream()
-                        .map(rangeReq -> mapToRange(rangeReq, tariffTable, categories.get(catReq.name()))))
+                        .map(rangeReq -> mapToRange(rangeReq, null, categories.get(catReq.name()))))
                 .collect(Collectors.toList());
 
-        tariffTable.setConsumptionRanges(ranges);
+        TariffTable tariffTable = TariffTable.builder()
+                .name(request.name())
+                .effectiveDate(request.effectiveDate())
+                .createdBy(user.id())
+                .consumptionRanges(ranges)
+                .build();
+
+        ranges.forEach(range -> range.setTariffTable(tariffTable));
 
         validateConsumptionRanges(ranges);
         TariffTable saved = tariffTableRepository.save(tariffTable);
