@@ -19,27 +19,35 @@ import java.util.List;
 public class ListTariffTablesUseCase implements UseCase<Pageable, PageResult<TariffTableSummaryResponse>> {
 
     private final TariffTableRepository tariffTableRepository;
+@Override
+public PageResult<TariffTableSummaryResponse> execute(Pageable pageable) {
+    List<TariffTableSummaryProjection> projections = tariffTableRepository.findAllSummaryProjected(
+            pageable.pageSize(),
+            pageable.offset()
+    );
 
-    @Override
-    public PageResult<TariffTableSummaryResponse> execute(Pageable pageable) {
-        Page<TariffTableSummaryProjection> page = tariffTableRepository.findAllSummaryProjected(pageable.toPageRequest());
+    long totalElements = tariffTableRepository.countAllSummary();
 
-        List<TariffTableSummaryResponse> content = page.getContent().stream()
-                .map(p -> new TariffTableSummaryResponse(
-                        p.getTableId(),
-                        p.getTableName(),
-                        p.getTableEffectiveDate(),
-                        new CreatedByResponse(p.getUserId(), p.getUsername(), p.getFirstName(), p.getLastName())
-                ))
-                .toList();
+    List<TariffTableSummaryResponse> content = projections.stream()
+            .map(p -> new TariffTableSummaryResponse(
+                    p.getTableId(),
+                    p.getTableName(),
+                    p.getTableEffectiveDate(),
+                    new CreatedByResponse(p.getUserId(), p.getUsername(), p.getFirstName(), p.getLastName())
+            ))
+            .toList();
 
-        return new PageResult<>(
-                content, 
-                page.getNumber(), 
-                page.getTotalPages(), 
-                page.getTotalElements(), 
-                page.getSize(), 
-                page.isFirst(), 
-                page.isLast());
+    int totalPages = (int) Math.ceil((double) totalElements / pageable.pageSize());
+
+    return new PageResult<>(
+            content,
+            pageable.pageNumber(),
+            totalPages,
+            totalElements,
+            pageable.pageSize(),
+            pageable.pageNumber() == 0,
+            pageable.pageNumber() >= totalPages - 1
+    );
     }
 }
+

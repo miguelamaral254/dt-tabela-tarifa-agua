@@ -11,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -41,25 +39,27 @@ class ListTariffTablesUseCaseTest {
         when(p.getTableEffectiveDate()).thenReturn(LocalDate.now());
         when(p.getUserId()).thenReturn(UUID.randomUUID());
 
-        Page<TariffTableSummaryProjection> page = new PageImpl<>(List.of(p));
-        when(tariffTableRepository.findAllSummaryProjected(any())).thenReturn(page);
+        when(tariffTableRepository.findAllSummaryProjected(10, 0)).thenReturn(List.of(p));
+        when(tariffTableRepository.countAllSummary()).thenReturn(1L);
 
         PageResult<TariffTableSummaryResponse> result = listTariffTablesUseCase.execute(pageable);
 
         assertNotNull(result);
         assertEquals(1, result.content().size());
         assertEquals("Tabela 1", result.content().get(0).name());
+        assertEquals(1L, result.totalElements());
     }
 
     @Test
     @DisplayName("Should return empty page result")
     void shouldReturnEmptyPage() {
         Pageable pageable = new Pageable(0, 10);
-        Page<TariffTableSummaryProjection> page = new PageImpl<>(List.of());
-        when(tariffTableRepository.findAllSummaryProjected(any())).thenReturn(page);
+        when(tariffTableRepository.findAllSummaryProjected(10, 0)).thenReturn(List.of());
+        when(tariffTableRepository.countAllSummary()).thenReturn(0L);
 
         PageResult<TariffTableSummaryResponse> result = listTariffTablesUseCase.execute(pageable);
 
         assertTrue(result.content().isEmpty());
+        assertEquals(0L, result.totalElements());
     }
 }
