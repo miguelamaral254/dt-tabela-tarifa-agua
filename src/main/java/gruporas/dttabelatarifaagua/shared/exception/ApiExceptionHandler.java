@@ -72,27 +72,34 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ApiErrorResponse> handle(ValidationException ex) {
-        String title = getLocalizedMessage(VALIDATION_ERROR_TITLE);
-        String detail = getLocalizedMessage(ex.getCode(), ex.getArgs());
-        ApiErrorResponse error = new ApiErrorResponse(title, HttpStatus.BAD_REQUEST.value(), detail);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    public ResponseEntity<ApiErrorResponseDTO> handle(ValidationException ex, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(problemDetailFactory.create(HttpStatus.BAD_REQUEST, ex.getCode(), request, ex.getArgs()));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handle(EntityNotFoundException ex) {
-        String title = getLocalizedMessage("error.notFound");
-        String detail = getLocalizedMessage(ex.getCode());
-        ApiErrorResponse error = new ApiErrorResponse(title, HttpStatus.NOT_FOUND.value(), detail);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    public ResponseEntity<ApiErrorResponseDTO> handle(EntityNotFoundException ex, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(problemDetailFactory.create(HttpStatus.NOT_FOUND, ex.getCode(), request));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handle(ResourceNotFoundException ex) {
-        String title = getLocalizedMessage("error.notFound");
-        String detail = getLocalizedMessage(ex.getCode());
-        ApiErrorResponse error = new ApiErrorResponse(title, HttpStatus.NOT_FOUND.value(), detail);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    public ResponseEntity<ApiErrorResponseDTO> handle(ResourceNotFoundException ex, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(problemDetailFactory.create(HttpStatus.NOT_FOUND, ex.getCode(), request));
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiErrorResponseDTO> handleForbidden(ForbiddenException ex, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(problemDetailFactory.create(HttpStatus.FORBIDDEN, ex.getMessage(), request));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponseDTO> handleAllUnhandledExceptions(Exception ex, WebRequest request) {
+        LOG.error("Unhandled exception occurred: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(problemDetailFactory.create(HttpStatus.INTERNAL_SERVER_ERROR, "error.internal", request));
     }
 
     private String getLocalizedMessage(String code, Object... args) {
@@ -102,18 +109,5 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             LOG.warn("Message code not found: {}", code);
             return code;
         }
-    }
-
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ApiErrorResponse> handleForbidden(ForbiddenException ex) {
-        ApiErrorResponse error = new ApiErrorResponse("Access Denied", HttpStatus.FORBIDDEN.value(), ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> handleAllUnhandledExceptions(Exception ex, WebRequest request) {
-        LOG.error("Unhandled exception occurred: {}", ex.getMessage(), ex);
-        ApiErrorResponse error = new ApiErrorResponse("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred. Please contact support if the issue persists");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }
