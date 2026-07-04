@@ -23,21 +23,27 @@ public class ListUsersUseCase implements UseCase<UserFilter, PageResult<UserResp
         log.info("Buscando usuários com perfil: {}", filter.getRole());
         try {
             String roleName = filter.getRole() != null ? filter.getRole().name() : null;
+            int pageSize = filter.getPageable().pageSize();
+            int offset = filter.getPageable().offset();
 
-            Page<User> page = userRepository.findAllFiltered(roleName, filter.getPageable().toPageRequest());
-            
-            var content = page.getContent().stream()
+            java.util.List<User> users = userRepository.findAllFiltered(roleName, pageSize, offset);
+            long totalElements = userRepository.countAllFiltered(roleName);
+
+            var content = users.stream()
                     .map(u -> new UserResponse(u.getId(), u.getUsername(), u.getEmail(), u.getCpf(), u.getFirstName(), u.getLastName(), u.getRole()))
                     .toList();
             
+            int totalPages = (int) Math.ceil((double) totalElements / pageSize);
+
             return new PageResult<>(
-                    content, 
-                    page.getNumber(), 
-                    page.getTotalPages(), 
-                    page.getTotalElements(), 
-                    page.getSize(), 
-                    page.isFirst(), 
-                    page.isLast());
+                    content,
+                    filter.getPageable().pageNumber(),
+                    totalPages,
+                    totalElements,
+                    pageSize,
+                    filter.getPageable().pageNumber() == 0,
+                    filter.getPageable().pageNumber() >= totalPages - 1
+            );
         } catch (Exception e) {
             log.error("Erro ao listar usuários", e);
             throw e;

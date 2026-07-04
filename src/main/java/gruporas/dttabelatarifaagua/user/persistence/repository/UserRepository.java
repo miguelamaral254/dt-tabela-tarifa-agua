@@ -19,8 +19,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query(value = """
             SELECT * FROM users u 
             WHERE (:role IS NULL OR u.role = :role)
-            """, 
-            countQuery = "SELECT count(*) FROM users u WHERE (:role IS NULL OR u.role = :role)",
+            LIMIT :pageSize OFFSET :offset
+            """,
             nativeQuery = true)
-    Page<User> findAllFiltered(@Param("role") String role, Pageable pageable);
+    java.util.List<User> findAllFiltered(@Param("role") String role, @Param("pageSize") int pageSize, @Param("offset") int offset);
+
+    @Query(value = "SELECT count(*) FROM users u WHERE (:role IS NULL OR u.role = :role)", nativeQuery = true)
+    long countAllFiltered(@Param("role") String role);
 }
