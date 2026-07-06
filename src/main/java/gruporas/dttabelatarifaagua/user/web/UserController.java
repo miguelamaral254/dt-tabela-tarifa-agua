@@ -11,7 +11,6 @@ import gruporas.dttabelatarifaagua.user.web.dto.CreateUserRequest;
 import gruporas.dttabelatarifaagua.user.web.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -27,25 +26,23 @@ public class UserController {
     private final GetUserByIdUseCase getUserByIdUseCase;
 
     @PostMapping
-    public ResponseEntity<UUID> create(@Valid @RequestBody CreateUserRequest request) {
-        UUID userId = createUserUseCase.execute(request);
-        return new ResponseEntity<>(userId, HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public UUID create(@Valid @RequestBody CreateUserRequest request) {
+        return createUserUseCase.execute(request);
     }
 
     @GetMapping
-    public ResponseEntity<PageResult<UserResponse>> list(
+    public PageResult<UserResponse> list(
             @RequestParam(required = false) Role role,
             @RequestParam(required = false, defaultValue = "0") int pageNumber,
             @RequestParam(required = false, defaultValue = "10") int pageSize) {
 
         var filter = new UserFilter(role, new Pageable(pageNumber, pageSize));
-        var result = listUsersUseCase.execute(filter);
-        return ResponseEntity.ok(result);
+        return listUsersUseCase.execute(filter);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getById(@PathVariable UUID id) {
-        var response = getUserByIdUseCase.execute(id);
-        return ResponseEntity.ok(response);
+    public UserResponse getById(@PathVariable UUID id) {
+        return getUserByIdUseCase.execute(id);
     }
 }

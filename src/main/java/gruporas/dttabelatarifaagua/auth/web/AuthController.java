@@ -4,7 +4,6 @@ import gruporas.dttabelatarifaagua.auth.core.usecases.AuthenticateUserUseCase;
 import gruporas.dttabelatarifaagua.auth.web.dto.LoginRequest;
 import gruporas.dttabelatarifaagua.auth.web.dto.LoginResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,8 +17,8 @@ public class AuthController {
     private final AuthenticateUserUseCase authenticateUserUseCase;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public LoginResponse login(@RequestBody LoginRequest request) {
         String token = authenticateUserUseCase.execute(request);
-        return ResponseEntity.ok(new LoginResponse(token));
+        return new LoginResponse(token);
     }
 }

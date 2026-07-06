@@ -6,7 +6,6 @@ import gruporas.dttabelatarifaagua.shared.pagination.PageResult;
 import gruporas.dttabelatarifaagua.tariff.web.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -23,36 +22,33 @@ public class TariffTableController {
     private final DeleteTariffTableUseCase deleteTariffTableUseCase;
 
     @PostMapping
-    public ResponseEntity<UUID> create(@RequestBody TariffTableRequest request) {
-        UUID id = createTariffTableUseCase.execute(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(id);
+    @ResponseStatus(HttpStatus.CREATED)
+    public UUID create(@RequestBody TariffTableRequest request) {
+        return createTariffTableUseCase.execute(request);
     }
 
     @GetMapping("/atual")
-    public ResponseEntity<TariffTableResponse> getCurrent() {
-        var response = getCurrentTariffTableUseCase.execute();
-        return ResponseEntity.ok(response);
+    public TariffTableResponse getCurrent() {
+        return getCurrentTariffTableUseCase.execute();
     }
 
     @GetMapping
-    public ResponseEntity<PageResult<TariffTableSummaryResponse>> list(
+    public PageResult<TariffTableSummaryResponse> list(
             @RequestParam(required = false, defaultValue = "0") int pageNumber,
             @RequestParam(required = false, defaultValue = "10") int pageSize) {
 
-        var result = listTariffTablesUseCase.execute(new Pageable(pageNumber, pageSize));
-        return ResponseEntity.ok(result);
+        return listTariffTablesUseCase.execute(new Pageable(pageNumber, pageSize));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TariffTableResponse> getById(@PathVariable UUID id) {
-        var response = getTariffTableByIdUseCase.execute(id);
-        return ResponseEntity.ok(response);
+    public TariffTableResponse getById(@PathVariable UUID id) {
+        return getTariffTableByIdUseCase.execute(id);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID id) {
         deleteTariffTableUseCase.execute(id);
-        return ResponseEntity.noContent().build();
     }
 }
 
